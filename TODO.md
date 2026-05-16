@@ -21,7 +21,7 @@
 
 ## Phase 3: コア機能実装 (T016-T030 = 15タスク、上の features 5個を3タスクずつ分解)
 - [x] T016: emoji-picker — 設計
-- [ ] T017: emoji-picker — 実装
+- [x] T017: emoji-picker — 実装
 - [ ] T018: emoji-picker — テスト・整合
 - [ ] T019: daily-prompt — 設計
 - [ ] T020: daily-prompt — 実装

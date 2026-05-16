@@ -1,49 +1,24 @@
 /// <reference types="chrome" />
 
 import { applyI18n, t } from "./i18n";
+import {
+  EMOJI_GLYPH,
+  EMOJI_LABEL_KEY,
+  EMOTION_KEYS,
+  type EmotionKey,
+} from "./emoji";
+import {
+  addEntry,
+  getEntries,
+  isEmotionKey,
+  NOTE_MAX_LENGTH,
+  type Entry,
+} from "./storage";
 
-type EmotionKey =
-  | "happy"
-  | "calm"
-  | "tired"
-  | "sad"
-  | "angry"
-  | "anxious";
-
-interface Entry {
-  ts: number;
-  emoji: EmotionKey;
-  note?: string;
-}
-
-const STORAGE_KEY_ENTRIES = "entries";
-const NOTE_MAX_LENGTH = 200;
 const SAVED_STATUS_RESET_MS = 2000;
-
-const EMOJI_GLYPH: Record<EmotionKey, string> = {
-  happy: "😊",
-  calm: "😌",
-  tired: "😪",
-  sad: "😢",
-  angry: "😠",
-  anxious: "😰",
-};
-
-const EMOJI_LABEL_KEY: Record<EmotionKey, string> = {
-  happy: "emoji_happy",
-  calm: "emoji_calm",
-  tired: "emoji_tired",
-  sad: "emoji_sad",
-  angry: "emoji_angry",
-  anxious: "emoji_anxious",
-};
 
 let selectedEmoji: EmotionKey | null = null;
 let savedStatusTimer: number | null = null;
-
-function isEmotionKey(value: string): value is EmotionKey {
-  return value in EMOJI_GLYPH;
-}
 
 function startOfTodayMs(): number {
   const now = new Date();
@@ -61,32 +36,32 @@ function formatClock(ts: number): string {
   return `${hh}:${mm}`;
 }
 
-async function loadEntries(): Promise<Entry[]> {
-  const data = await chrome.storage.local.get(STORAGE_KEY_ENTRIES);
-  const raw = data[STORAGE_KEY_ENTRIES];
-  return Array.isArray(raw) ? (raw as Entry[]) : [];
+function getEmojiButtons(): HTMLButtonElement[] {
+  return Array.from(
+    document.querySelectorAll<HTMLButtonElement>(".emoji-btn"),
+  );
 }
 
-async function saveEntry(entry: Entry): Promise<void> {
-  const entries = await loadEntries();
-  entries.push(entry);
-  await chrome.storage.local.set({ [STORAGE_KEY_ENTRIES]: entries });
+function getButtonByEmoji(emoji: EmotionKey): HTMLButtonElement | null {
+  return (
+    document.querySelector<HTMLButtonElement>(
+      `.emoji-btn[data-emoji="${emoji}"]`,
+    ) ?? null
+  );
 }
 
-function getEmojiButtons(): NodeListOf<HTMLButtonElement> {
-  return document.querySelectorAll<HTMLButtonElement>(".emoji-btn");
-}
-
-function updateSelection(target: HTMLButtonElement): void {
+function updateSelection(target: HTMLButtonElement, focus = false): void {
   const emoji = target.dataset.emoji;
   if (!emoji || !isEmotionKey(emoji)) return;
 
   selectedEmoji = emoji;
-  getEmojiButtons().forEach((btn) => {
+  for (const btn of getEmojiButtons()) {
     const isSelected = btn === target;
     btn.setAttribute("aria-checked", isSelected ? "true" : "false");
     btn.classList.toggle("is-selected", isSelected);
-  });
+    btn.tabIndex = isSelected ? 0 : -1;
+  }
+  if (focus) target.focus();
 
   const saveBtn = document.getElementById("save-btn") as HTMLButtonElement | null;
   if (saveBtn) saveBtn.disabled = false;
@@ -116,7 +91,7 @@ function renderToday(entries: Entry[]): void {
 
   const since = startOfTodayMs();
   const today = entries
-    .filter((e) => typeof e.ts === "number" && e.ts >= since)
+    .filter((e) => e.ts >= since)
     .sort((a, b) => b.ts - a.ts);
 
   list.innerHTML = "";
@@ -128,7 +103,6 @@ function renderToday(entries: Entry[]): void {
 
   const frag = document.createDocumentFragment();
   for (const entry of today) {
-    if (!isEmotionKey(entry.emoji)) continue;
     const li = document.createElement("li");
     li.className = "today__item";
 
@@ -161,15 +135,17 @@ function renderToday(entries: Entry[]): void {
 }
 
 async function refreshToday(): Promise<void> {
-  const entries = await loadEntries();
+  const entries = await getEntries();
   renderToday(entries);
 }
 
 function resetForm(): void {
   selectedEmoji = null;
-  getEmojiButtons().forEach((btn) => {
+  const buttons = getEmojiButtons();
+  buttons.forEach((btn, index) => {
     btn.setAttribute("aria-checked", "false");
     btn.classList.remove("is-selected");
+    btn.tabIndex = index === 0 ? 0 : -1;
   });
   const note = document.getElementById("note-input") as HTMLTextAreaElement | null;
   if (note) note.value = "";
@@ -186,11 +162,12 @@ async function handleSave(): Promise<void> {
   if (saveBtn) saveBtn.disabled = true;
 
   try {
-    await saveEntry({
+    const entry: Entry = {
       ts: Date.now(),
       emoji: selectedEmoji,
       ...(note ? { note } : {}),
-    });
+    };
+    await addEntry(entry);
     setStatus(t("popup_saved"));
     resetForm();
     await refreshToday();
@@ -201,13 +178,44 @@ async function handleSave(): Promise<void> {
   }
 }
 
+function moveSelection(currentIndex: number, delta: number): void {
+  const buttons = getEmojiButtons();
+  if (buttons.length === 0) return;
+  const next = (currentIndex + delta + buttons.length) % buttons.length;
+  updateSelection(buttons[next], true);
+}
+
 function bindEmojiPicker(): void {
-  getEmojiButtons().forEach((btn) => {
+  const buttons = getEmojiButtons();
+  buttons.forEach((btn, index) => {
+    btn.tabIndex = index === 0 ? 0 : -1;
     btn.addEventListener("click", () => updateSelection(btn));
     btn.addEventListener("keydown", (event) => {
-      if (event.key === " " || event.key === "Enter") {
-        event.preventDefault();
-        updateSelection(btn);
+      switch (event.key) {
+        case " ":
+        case "Enter":
+          event.preventDefault();
+          updateSelection(btn);
+          break;
+        case "ArrowRight":
+        case "ArrowDown":
+          event.preventDefault();
+          moveSelection(index, 1);
+          break;
+        case "ArrowLeft":
+        case "ArrowUp":
+          event.preventDefault();
+          moveSelection(index, -1);
+          break;
+        case "Home":
+          event.preventDefault();
+          if (buttons.length > 0) updateSelection(buttons[0], true);
+          break;
+        case "End":
+          event.preventDefault();
+          if (buttons.length > 0)
+            updateSelection(buttons[buttons.length - 1], true);
+          break;
       }
     });
   });
@@ -226,6 +234,12 @@ function bindActions(): void {
 
 function bootstrap(): void {
   applyI18n(document);
+  // 全 EMOTION_KEYS が DOM 上に存在するか検証 (開発時の取り違え検出のみ)
+  for (const key of EMOTION_KEYS) {
+    if (!getButtonByEmoji(key)) {
+      console.warn(`[emotion-checkin] missing emoji button: ${key}`);
+    }
+  }
   bindEmojiPicker();
   bindActions();
   void refreshToday();
