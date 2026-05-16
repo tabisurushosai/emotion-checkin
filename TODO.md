@@ -31,7 +31,7 @@
 - [x] T024: weekly-summary — テスト・整合
 - [x] T025: parent-share — 設計
 - [x] T026: parent-share — 実装
-- [ ] T027: parent-share — テスト・整合
+- [x] T027: parent-share — テスト・整合
 - [ ] T028: calendar-view — 設計
 - [ ] T029: calendar-view — 実装
 - [ ] T030: calendar-view — テスト・整合
