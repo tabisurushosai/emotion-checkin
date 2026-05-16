@@ -14,12 +14,11 @@ export default defineConfig({
       input: {
         popup: resolve(__dirname, 'src/popup.html'),
         background: resolve(__dirname, 'src/background.ts'),
-        content: resolve(__dirname, 'src/content.ts'),
         options: resolve(__dirname, 'src/options.html'),
       },
       output: {
         entryFileNames: (chunk) => {
-          if (chunk.name === 'background' || chunk.name === 'content') {
+          if (chunk.name === 'background') {
             return '[name].js';
           }
           return 'assets/[name].js';
