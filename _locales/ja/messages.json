@@ -1,0 +1,216 @@
+{
+  "appName": {
+    "message": "きもち記録",
+    "description": "拡張機能の名前"
+  },
+  "appDesc": {
+    "message": "1日数回の絵文字感情記録 + 週次保護者通知",
+    "description": "拡張機能の説明 (132字以内)"
+  },
+  "popup_title": {
+    "message": "今のきもちは?",
+    "description": "ポップアップの見出し"
+  },
+  "popup_subtitle": {
+    "message": "絵文字をタップして記録しよう",
+    "description": "ポップアップのサブテキスト"
+  },
+  "popup_save": {
+    "message": "保存",
+    "description": "保存ボタン"
+  },
+  "popup_saved": {
+    "message": "保存しました",
+    "description": "保存完了メッセージ"
+  },
+  "popup_today": {
+    "message": "今日の記録",
+    "description": "今日のセクション見出し"
+  },
+  "popup_history": {
+    "message": "履歴",
+    "description": "履歴セクション見出し"
+  },
+  "popup_note_placeholder": {
+    "message": "メモ (任意)",
+    "description": "メモ入力欄のプレースホルダ"
+  },
+  "popup_no_records": {
+    "message": "まだ記録がありません",
+    "description": "記録ゼロ時のメッセージ"
+  },
+  "emoji_happy": {
+    "message": "うれしい",
+    "description": "絵文字: 嬉しい"
+  },
+  "emoji_calm": {
+    "message": "おだやか",
+    "description": "絵文字: 穏やか"
+  },
+  "emoji_tired": {
+    "message": "つかれた",
+    "description": "絵文字: 疲れた"
+  },
+  "emoji_sad": {
+    "message": "かなしい",
+    "description": "絵文字: 悲しい"
+  },
+  "emoji_angry": {
+    "message": "いらいら",
+    "description": "絵文字: 怒り"
+  },
+  "emoji_anxious": {
+    "message": "ふあん",
+    "description": "絵文字: 不安"
+  },
+  "options_title": {
+    "message": "設定",
+    "description": "オプション画面の見出し"
+  },
+  "options_language": {
+    "message": "言語",
+    "description": "言語設定"
+  },
+  "options_notification": {
+    "message": "通知",
+    "description": "通知設定"
+  },
+  "options_notification_enable": {
+    "message": "リマインダー通知を有効にする",
+    "description": "通知ON/OFF"
+  },
+  "options_notification_times": {
+    "message": "通知時刻",
+    "description": "通知時刻設定"
+  },
+  "options_parent_share": {
+    "message": "保護者への共有",
+    "description": "保護者共有設定"
+  },
+  "options_parent_email": {
+    "message": "保護者のメールアドレス",
+    "description": "保護者メール入力"
+  },
+  "options_weekly_summary": {
+    "message": "週次サマリー",
+    "description": "週次サマリー設定"
+  },
+  "options_export": {
+    "message": "データをエクスポート",
+    "description": "エクスポートボタン"
+  },
+  "options_import": {
+    "message": "データをインポート",
+    "description": "インポートボタン"
+  },
+  "options_reset": {
+    "message": "すべての記録を削除",
+    "description": "リセットボタン"
+  },
+  "options_reset_confirm": {
+    "message": "本当にすべての記録を削除しますか?この操作は取り消せません。",
+    "description": "リセット確認"
+  },
+  "options_save": {
+    "message": "設定を保存",
+    "description": "設定保存ボタン"
+  },
+  "weekly_title": {
+    "message": "今週のきもち",
+    "description": "週次サマリー見出し"
+  },
+  "weekly_total": {
+    "message": "記録回数",
+    "description": "記録回数ラベル"
+  },
+  "weekly_top_emotion": {
+    "message": "一番多いきもち",
+    "description": "最頻感情ラベル"
+  },
+  "calendar_title": {
+    "message": "カレンダー",
+    "description": "カレンダービュー見出し"
+  },
+  "calendar_prev": {
+    "message": "前の月",
+    "description": "前月ボタン"
+  },
+  "calendar_next": {
+    "message": "次の月",
+    "description": "次月ボタン"
+  },
+  "premium_title": {
+    "message": "プレミアム機能",
+    "description": "プレミアム見出し"
+  },
+  "premium_desc": {
+    "message": "詳細統計・無制限記録・カスタマイズ拡張をアンロック",
+    "description": "プレミアム説明"
+  },
+  "premium_price": {
+    "message": "$3 USD 買い切り",
+    "description": "プレミアム価格"
+  },
+  "premium_unlock": {
+    "message": "アンロックする",
+    "description": "購入ボタン"
+  },
+  "premium_trial_start": {
+    "message": "7日間無料で試す",
+    "description": "トライアル開始ボタン"
+  },
+  "premium_trial_active": {
+    "message": "無料お試し期間中 (残り $1$ 日)",
+    "description": "トライアル中表示",
+    "placeholders": {
+      "days": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "premium_trial_expired": {
+    "message": "お試し期間が終了しました",
+    "description": "トライアル期限切れ"
+  },
+  "premium_unlocked": {
+    "message": "プレミアム解放済み",
+    "description": "プレミアム購入済み表示"
+  },
+  "error_generic": {
+    "message": "エラーが発生しました",
+    "description": "汎用エラー"
+  },
+  "error_save": {
+    "message": "保存に失敗しました",
+    "description": "保存エラー"
+  },
+  "day_mon": {
+    "message": "月",
+    "description": "月曜"
+  },
+  "day_tue": {
+    "message": "火",
+    "description": "火曜"
+  },
+  "day_wed": {
+    "message": "水",
+    "description": "水曜"
+  },
+  "day_thu": {
+    "message": "木",
+    "description": "木曜"
+  },
+  "day_fri": {
+    "message": "金",
+    "description": "金曜"
+  },
+  "day_sat": {
+    "message": "土",
+    "description": "土曜"
+  },
+  "day_sun": {
+    "message": "日",
+    "description": "日曜"
+  }
+}
