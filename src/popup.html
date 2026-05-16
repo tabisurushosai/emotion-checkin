@@ -148,6 +148,71 @@
         </p>
       </section>
 
+      <section class="weekly" aria-labelledby="weekly-heading">
+        <h2 id="weekly-heading" class="section-title" data-i18n="weekly_title">
+          今週のきもち
+        </h2>
+        <dl id="weekly-summary" class="weekly__summary">
+          <div class="weekly__row">
+            <dt data-i18n="weekly_total">記録回数</dt>
+            <dd id="weekly-total">0</dd>
+          </div>
+          <div
+            id="weekly-top-row"
+            class="weekly__row"
+            hidden
+          >
+            <dt data-i18n="weekly_top_emotion">一番多いきもち</dt>
+            <dd id="weekly-top"></dd>
+          </div>
+        </dl>
+        <ul id="weekly-days" class="weekly__days">
+          <li class="weekly__day" data-day="mon">
+            <span class="weekly__day-label" data-i18n="day_mon">月</span>
+            <span class="weekly__day-count">0</span>
+            <div class="weekly__bar" aria-hidden="true" style="--ratio: 0"></div>
+          </li>
+          <li class="weekly__day" data-day="tue">
+            <span class="weekly__day-label" data-i18n="day_tue">火</span>
+            <span class="weekly__day-count">0</span>
+            <div class="weekly__bar" aria-hidden="true" style="--ratio: 0"></div>
+          </li>
+          <li class="weekly__day" data-day="wed">
+            <span class="weekly__day-label" data-i18n="day_wed">水</span>
+            <span class="weekly__day-count">0</span>
+            <div class="weekly__bar" aria-hidden="true" style="--ratio: 0"></div>
+          </li>
+          <li class="weekly__day" data-day="thu">
+            <span class="weekly__day-label" data-i18n="day_thu">木</span>
+            <span class="weekly__day-count">0</span>
+            <div class="weekly__bar" aria-hidden="true" style="--ratio: 0"></div>
+          </li>
+          <li class="weekly__day" data-day="fri">
+            <span class="weekly__day-label" data-i18n="day_fri">金</span>
+            <span class="weekly__day-count">0</span>
+            <div class="weekly__bar" aria-hidden="true" style="--ratio: 0"></div>
+          </li>
+          <li class="weekly__day" data-day="sat">
+            <span class="weekly__day-label" data-i18n="day_sat">土</span>
+            <span class="weekly__day-count">0</span>
+            <div class="weekly__bar" aria-hidden="true" style="--ratio: 0"></div>
+          </li>
+          <li class="weekly__day" data-day="sun">
+            <span class="weekly__day-label" data-i18n="day_sun">日</span>
+            <span class="weekly__day-count">0</span>
+            <div class="weekly__bar" aria-hidden="true" style="--ratio: 0"></div>
+          </li>
+        </ul>
+        <p
+          id="weekly-empty"
+          class="weekly__empty"
+          data-i18n="popup_no_records"
+          hidden
+        >
+          まだ記録がありません
+        </p>
+      </section>
+
       <footer class="popup__footer">
         <button
           type="button"

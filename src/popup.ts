@@ -14,6 +14,11 @@ import {
   NOTE_MAX_LENGTH,
   type Entry,
 } from "./storage";
+import {
+  computeWeeklyStats,
+  WEEKDAY_KEYS,
+  type WeeklyStats,
+} from "./weekly";
 
 const SAVED_STATUS_RESET_MS = 2000;
 
@@ -139,6 +144,58 @@ async function refreshToday(): Promise<void> {
   renderToday(entries);
 }
 
+function renderWeekly(stats: WeeklyStats): void {
+  const totalEl = document.getElementById("weekly-total");
+  const topRow = document.getElementById("weekly-top-row");
+  const topEl = document.getElementById("weekly-top");
+  const daysList = document.getElementById("weekly-days");
+  const empty = document.getElementById("weekly-empty") as HTMLElement | null;
+  if (!totalEl || !topRow || !topEl || !daysList || !empty) return;
+
+  totalEl.textContent = String(stats.total);
+
+  if (stats.total === 0 || !stats.topEmotion) {
+    topRow.setAttribute("hidden", "");
+    topEl.textContent = "";
+  } else {
+    topRow.removeAttribute("hidden");
+    const glyph = EMOJI_GLYPH[stats.topEmotion];
+    const label = t(EMOJI_LABEL_KEY[stats.topEmotion]);
+    const count = stats.byEmoji[stats.topEmotion];
+    topEl.textContent = `${glyph} ${label} (${count})`;
+  }
+
+  if (stats.total === 0) {
+    daysList.setAttribute("hidden", "");
+    empty.hidden = false;
+  } else {
+    daysList.removeAttribute("hidden");
+    empty.hidden = true;
+  }
+
+  const maxCount = Math.max(
+    ...WEEKDAY_KEYS.map((k) => stats.byDay[k]),
+    0,
+  ) || 1;
+
+  for (const key of WEEKDAY_KEYS) {
+    const li = daysList.querySelector<HTMLLIElement>(
+      `.weekly__day[data-day="${key}"]`,
+    );
+    if (!li) continue;
+    const count = stats.byDay[key];
+    const countEl = li.querySelector(".weekly__day-count");
+    if (countEl) countEl.textContent = String(count);
+    const bar = li.querySelector<HTMLDivElement>(".weekly__bar");
+    if (bar) bar.style.setProperty("--ratio", String(count / maxCount));
+  }
+}
+
+async function refreshWeekly(): Promise<void> {
+  const entries = await getEntries();
+  renderWeekly(computeWeeklyStats(entries));
+}
+
 function resetForm(): void {
   selectedEmoji = null;
   const buttons = getEmojiButtons();
@@ -171,6 +228,7 @@ async function handleSave(): Promise<void> {
     setStatus(t("popup_saved"));
     resetForm();
     await refreshToday();
+    await refreshWeekly();
   } catch (err) {
     console.error("[emotion-checkin] save failed", err);
     setStatus(t("error_save"));
@@ -243,6 +301,7 @@ function bootstrap(): void {
   bindEmojiPicker();
   bindActions();
   void refreshToday();
+  void refreshWeekly();
 }
 
 if (document.readyState === "loading") {
