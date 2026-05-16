@@ -203,6 +203,10 @@
     "message": "Purchase flow is coming soon",
     "description": "Message shown when Unlock is pressed before Stripe integration ships"
   },
+  "premium_unlock_opened": {
+    "message": "Opened the purchase page in a new tab",
+    "description": "Message shown right after Stripe Checkout opens in a new tab"
+  },
   "notif_daily_title": {
     "message": "Time to check in",
     "description": "Daily reminder notification title"

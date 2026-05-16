@@ -34,6 +34,7 @@ import {
   getPremiumStatus,
   type PremiumStatus,
 } from "./premium";
+import { openCheckout } from "./upgrade";
 
 const SAVED_STATUS_RESET_MS = 2000;
 
@@ -702,8 +703,18 @@ async function handleTrialStart(): Promise<void> {
   }
 }
 
-function handleUnlockClick(): void {
-  setStatus(t("premium_unlock_pending"));
+async function handleUnlockClick(): Promise<void> {
+  try {
+    const result = await openCheckout({ locale: resolveShareLocale() });
+    if (result.opened) {
+      setStatus(t("premium_unlock_opened"));
+    } else {
+      setStatus(t("premium_unlock_pending"));
+    }
+  } catch (err) {
+    console.error("[emotion-checkin] unlock failed", err);
+    setStatus(t("error_generic"));
+  }
 }
 
 function bindActions(): void {
@@ -728,7 +739,7 @@ function bindActions(): void {
     void handleTrialStart();
   });
   document.getElementById("premium-unlock-btn")?.addEventListener("click", () => {
-    handleUnlockClick();
+    void handleUnlockClick();
   });
 }
 

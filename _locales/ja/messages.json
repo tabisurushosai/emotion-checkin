@@ -203,6 +203,10 @@
     "message": "購入機能は近日対応予定です",
     "description": "アンロックボタン押下時 (Stripe 連携未実装) のメッセージ"
   },
+  "premium_unlock_opened": {
+    "message": "新しいタブで購入ページを開きました",
+    "description": "Stripe Checkout を新規タブで開いた直後のメッセージ"
+  },
   "notif_daily_title": {
     "message": "きもちを記録しよう",
     "description": "デイリー通知の見出し"
