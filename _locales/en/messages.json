@@ -1,0 +1,216 @@
+{
+  "appName": {
+    "message": "Mood Check-in",
+    "description": "Extension name"
+  },
+  "appDesc": {
+    "message": "Quick emoji mood check-ins throughout the day with weekly summaries for parents.",
+    "description": "Extension description (under 132 chars)"
+  },
+  "popup_title": {
+    "message": "How do you feel right now?",
+    "description": "Popup heading"
+  },
+  "popup_subtitle": {
+    "message": "Tap an emoji to log your mood",
+    "description": "Popup subtext"
+  },
+  "popup_save": {
+    "message": "Save",
+    "description": "Save button"
+  },
+  "popup_saved": {
+    "message": "Saved",
+    "description": "Saved confirmation"
+  },
+  "popup_today": {
+    "message": "Today's check-ins",
+    "description": "Today section heading"
+  },
+  "popup_history": {
+    "message": "History",
+    "description": "History section heading"
+  },
+  "popup_note_placeholder": {
+    "message": "Note (optional)",
+    "description": "Note input placeholder"
+  },
+  "popup_no_records": {
+    "message": "No check-ins yet",
+    "description": "Empty state message"
+  },
+  "emoji_happy": {
+    "message": "Happy",
+    "description": "Emoji: happy"
+  },
+  "emoji_calm": {
+    "message": "Calm",
+    "description": "Emoji: calm"
+  },
+  "emoji_tired": {
+    "message": "Tired",
+    "description": "Emoji: tired"
+  },
+  "emoji_sad": {
+    "message": "Sad",
+    "description": "Emoji: sad"
+  },
+  "emoji_angry": {
+    "message": "Angry",
+    "description": "Emoji: angry"
+  },
+  "emoji_anxious": {
+    "message": "Anxious",
+    "description": "Emoji: anxious"
+  },
+  "options_title": {
+    "message": "Settings",
+    "description": "Options page heading"
+  },
+  "options_language": {
+    "message": "Language",
+    "description": "Language setting"
+  },
+  "options_notification": {
+    "message": "Notifications",
+    "description": "Notification setting"
+  },
+  "options_notification_enable": {
+    "message": "Enable reminder notifications",
+    "description": "Toggle notifications"
+  },
+  "options_notification_times": {
+    "message": "Reminder times",
+    "description": "Notification times setting"
+  },
+  "options_parent_share": {
+    "message": "Share with parent",
+    "description": "Parent sharing setting"
+  },
+  "options_parent_email": {
+    "message": "Parent's email address",
+    "description": "Parent email input"
+  },
+  "options_weekly_summary": {
+    "message": "Weekly summary",
+    "description": "Weekly summary setting"
+  },
+  "options_export": {
+    "message": "Export data",
+    "description": "Export button"
+  },
+  "options_import": {
+    "message": "Import data",
+    "description": "Import button"
+  },
+  "options_reset": {
+    "message": "Delete all records",
+    "description": "Reset button"
+  },
+  "options_reset_confirm": {
+    "message": "Delete all records permanently? This cannot be undone.",
+    "description": "Reset confirmation"
+  },
+  "options_save": {
+    "message": "Save settings",
+    "description": "Save settings button"
+  },
+  "weekly_title": {
+    "message": "This week's mood",
+    "description": "Weekly summary heading"
+  },
+  "weekly_total": {
+    "message": "Check-ins",
+    "description": "Total check-ins label"
+  },
+  "weekly_top_emotion": {
+    "message": "Most frequent mood",
+    "description": "Top emotion label"
+  },
+  "calendar_title": {
+    "message": "Calendar",
+    "description": "Calendar view heading"
+  },
+  "calendar_prev": {
+    "message": "Previous month",
+    "description": "Previous month button"
+  },
+  "calendar_next": {
+    "message": "Next month",
+    "description": "Next month button"
+  },
+  "premium_title": {
+    "message": "Premium features",
+    "description": "Premium heading"
+  },
+  "premium_desc": {
+    "message": "Unlock detailed stats, unlimited records, and extra customization.",
+    "description": "Premium description"
+  },
+  "premium_price": {
+    "message": "$3 USD one-time purchase",
+    "description": "Premium price"
+  },
+  "premium_unlock": {
+    "message": "Unlock",
+    "description": "Purchase button"
+  },
+  "premium_trial_start": {
+    "message": "Start 7-day free trial",
+    "description": "Trial start button"
+  },
+  "premium_trial_active": {
+    "message": "Free trial active ($1 days left)",
+    "description": "Trial active label",
+    "placeholders": {
+      "days": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "premium_trial_expired": {
+    "message": "Free trial ended",
+    "description": "Trial expired label"
+  },
+  "premium_unlocked": {
+    "message": "Premium unlocked",
+    "description": "Premium unlocked label"
+  },
+  "error_generic": {
+    "message": "Something went wrong",
+    "description": "Generic error"
+  },
+  "error_save": {
+    "message": "Failed to save",
+    "description": "Save error"
+  },
+  "day_mon": {
+    "message": "Mon",
+    "description": "Monday"
+  },
+  "day_tue": {
+    "message": "Tue",
+    "description": "Tuesday"
+  },
+  "day_wed": {
+    "message": "Wed",
+    "description": "Wednesday"
+  },
+  "day_thu": {
+    "message": "Thu",
+    "description": "Thursday"
+  },
+  "day_fri": {
+    "message": "Fri",
+    "description": "Friday"
+  },
+  "day_sat": {
+    "message": "Sat",
+    "description": "Saturday"
+  },
+  "day_sun": {
+    "message": "Sun",
+    "description": "Sunday"
+  }
+}
