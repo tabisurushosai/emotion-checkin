@@ -29,6 +29,11 @@ import {
   latestAllowedMonth,
   shiftMonth,
 } from "./calendar";
+import {
+  ensureTrialStarted,
+  getPremiumStatus,
+  type PremiumStatus,
+} from "./premium";
 
 const SAVED_STATUS_RESET_MS = 2000;
 
@@ -67,6 +72,7 @@ let latestStats: WeeklyStats | null = null;
 let viewYear: number = new Date().getFullYear();
 let viewMonth: number = new Date().getMonth();
 let selectedDay: { year: number; month: number; day: number } | null = null;
+let premiumStatus: PremiumStatus | null = null;
 
 function resolveShareLocale(): ShareLocale {
   const ui = chrome.i18n.getUILanguage?.() ?? "";
@@ -454,12 +460,16 @@ function renderCalendar(grid: ReturnType<typeof buildMonthGrid>): void {
   list.append(frag);
 }
 
+function isPremiumNow(): boolean {
+  return premiumStatus?.isPremiumActive ?? false;
+}
+
 function updateCalendarNav(): void {
   const prev = document.getElementById("calendar-prev") as HTMLButtonElement | null;
   const next = document.getElementById("calendar-next") as HTMLButtonElement | null;
   const hint = document.getElementById("calendar-locked-hint") as HTMLElement | null;
   const now = new Date();
-  const earliest = earliestAllowedMonth(now);
+  const earliest = earliestAllowedMonth(now, isPremiumNow());
   const latest = latestAllowedMonth(now);
 
   if (prev) {
@@ -565,7 +575,7 @@ async function renderDayDetail(
 
 function handlePrevMonth(): void {
   const now = new Date();
-  const earliest = earliestAllowedMonth(now);
+  const earliest = earliestAllowedMonth(now, isPremiumNow());
   const next = shiftMonth(viewYear, viewMonth, -1);
   if (compareYearMonth(next, earliest) < 0) {
     const hint = document.getElementById("calendar-locked-hint");
@@ -636,6 +646,66 @@ function bindEmojiPicker(): void {
   });
 }
 
+function renderPremiumSection(status: PremiumStatus): void {
+  const statusEl = document.getElementById("premium-status") as HTMLElement | null;
+  const descEl = document.getElementById("premium-desc") as HTMLElement | null;
+  const priceEl = document.getElementById("premium-price") as HTMLElement | null;
+  const trialBtn = document.getElementById(
+    "premium-trial-btn",
+  ) as HTMLButtonElement | null;
+  const unlockBtn = document.getElementById(
+    "premium-unlock-btn",
+  ) as HTMLButtonElement | null;
+  if (!statusEl || !descEl || !priceEl || !trialBtn || !unlockBtn) return;
+
+  if (status.unlocked) {
+    statusEl.textContent = t("premium_unlocked");
+    descEl.hidden = true;
+    priceEl.hidden = true;
+    trialBtn.hidden = true;
+    unlockBtn.hidden = true;
+    return;
+  }
+
+  descEl.hidden = false;
+  priceEl.hidden = false;
+  unlockBtn.hidden = false;
+
+  if (status.inTrial) {
+    statusEl.textContent = t("premium_trial_active", [
+      String(status.trialDaysRemaining),
+    ]);
+    trialBtn.hidden = true;
+  } else if (status.trialStartTs !== null) {
+    statusEl.textContent = t("premium_trial_expired");
+    trialBtn.hidden = true;
+  } else {
+    statusEl.textContent = "";
+    trialBtn.hidden = false;
+  }
+}
+
+async function refreshPremiumStatus(): Promise<void> {
+  premiumStatus = await getPremiumStatus();
+  renderPremiumSection(premiumStatus);
+}
+
+async function handleTrialStart(): Promise<void> {
+  try {
+    await ensureTrialStarted();
+    await refreshPremiumStatus();
+    await refreshCalendar();
+    setStatus(t("popup_saved"));
+  } catch (err) {
+    console.error("[emotion-checkin] trial start failed", err);
+    setStatus(t("error_generic"));
+  }
+}
+
+function handleUnlockClick(): void {
+  setStatus(t("premium_unlock_pending"));
+}
+
 function bindActions(): void {
   document.getElementById("save-btn")?.addEventListener("click", () => {
     void handleSave();
@@ -654,6 +724,12 @@ function bindActions(): void {
   document.getElementById("calendar-next")?.addEventListener("click", () => {
     handleNextMonth();
   });
+  document.getElementById("premium-trial-btn")?.addEventListener("click", () => {
+    void handleTrialStart();
+  });
+  document.getElementById("premium-unlock-btn")?.addEventListener("click", () => {
+    handleUnlockClick();
+  });
 }
 
 function bootstrap(): void {
@@ -668,7 +744,7 @@ function bootstrap(): void {
   bindActions();
   void refreshToday();
   void refreshWeekly();
-  void refreshCalendar();
+  void refreshPremiumStatus().then(() => refreshCalendar());
 }
 
 if (document.readyState === "loading") {

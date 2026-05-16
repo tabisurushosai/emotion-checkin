@@ -199,6 +199,10 @@
     "message": "Premium unlocked",
     "description": "Premium unlocked label"
   },
+  "premium_unlock_pending": {
+    "message": "Purchase flow is coming soon",
+    "description": "Message shown when Unlock is pressed before Stripe integration ships"
+  },
   "notif_daily_title": {
     "message": "Time to check in",
     "description": "Daily reminder notification title"

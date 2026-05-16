@@ -123,10 +123,17 @@ export function shiftMonth(
   return { year, month: next };
 }
 
+export const FREE_CALENDAR_HISTORY_MONTHS = 3;
+export const PREMIUM_CALENDAR_HISTORY_YEARS = 5;
+
 export function earliestAllowedMonth(
   now: Date = new Date(),
+  premium: boolean = false,
 ): { year: number; month: number } {
-  const m = now.getMonth() - 3;
+  if (premium) {
+    return { year: now.getFullYear() - PREMIUM_CALENDAR_HISTORY_YEARS, month: 0 };
+  }
+  const m = now.getMonth() - FREE_CALENDAR_HISTORY_MONTHS;
   if (m < 0) return { year: now.getFullYear() - 1, month: m + 12 };
   return { year: now.getFullYear(), month: m };
 }

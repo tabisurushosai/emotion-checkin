@@ -1,6 +1,11 @@
 /// <reference types="chrome" />
 
 import { applyI18n, t } from "./i18n";
+import {
+  ensureTrialStarted,
+  getPremiumStatus,
+  type PremiumStatus,
+} from "./premium";
 
 interface Settings {
   notifications_enabled: boolean;
@@ -190,6 +195,70 @@ async function handleReset(): Promise<void> {
   }
 }
 
+function renderPremiumCard(status: PremiumStatus): void {
+  const statusEl = document.getElementById(
+    "opt-premium-status",
+  ) as HTMLElement | null;
+  const descEl = document.getElementById(
+    "opt-premium-desc",
+  ) as HTMLElement | null;
+  const priceEl = document.getElementById(
+    "opt-premium-price",
+  ) as HTMLElement | null;
+  const trialBtn = document.getElementById(
+    "opt-premium-trial",
+  ) as HTMLButtonElement | null;
+  const unlockBtn = document.getElementById(
+    "opt-premium-unlock",
+  ) as HTMLButtonElement | null;
+  if (!statusEl || !descEl || !priceEl || !trialBtn || !unlockBtn) return;
+
+  if (status.unlocked) {
+    statusEl.textContent = t("premium_unlocked");
+    descEl.hidden = true;
+    priceEl.hidden = true;
+    trialBtn.hidden = true;
+    unlockBtn.hidden = true;
+    return;
+  }
+  descEl.hidden = false;
+  priceEl.hidden = false;
+  unlockBtn.hidden = false;
+
+  if (status.inTrial) {
+    statusEl.textContent = t("premium_trial_active", [
+      String(status.trialDaysRemaining),
+    ]);
+    trialBtn.hidden = true;
+  } else if (status.trialStartTs !== null) {
+    statusEl.textContent = t("premium_trial_expired");
+    trialBtn.hidden = true;
+  } else {
+    statusEl.textContent = "";
+    trialBtn.hidden = false;
+  }
+}
+
+async function refreshPremiumCard(): Promise<void> {
+  const status = await getPremiumStatus();
+  renderPremiumCard(status);
+}
+
+async function handleTrialStart(): Promise<void> {
+  try {
+    await ensureTrialStarted();
+    await refreshPremiumCard();
+    setStatus(t("popup_saved"));
+  } catch (err) {
+    console.error("[emotion-checkin] trial start failed", err);
+    setStatus(t("error_generic"));
+  }
+}
+
+function handleUnlockClick(): void {
+  setStatus(t("premium_unlock_pending"));
+}
+
 function bindActions(): void {
   document
     .getElementById("btn-save")
@@ -217,6 +286,14 @@ function bindActions(): void {
   document
     .getElementById("btn-reset")
     ?.addEventListener("click", () => void handleReset());
+
+  document
+    .getElementById("opt-premium-trial")
+    ?.addEventListener("click", () => void handleTrialStart());
+
+  document
+    .getElementById("opt-premium-unlock")
+    ?.addEventListener("click", () => handleUnlockClick());
 }
 
 async function bootstrap(): Promise<void> {
@@ -224,6 +301,7 @@ async function bootstrap(): Promise<void> {
   const settings = await loadSettings();
   populateForm(settings);
   bindActions();
+  await refreshPremiumCard();
 }
 
 if (document.readyState === "loading") {

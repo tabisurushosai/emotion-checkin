@@ -199,6 +199,10 @@
     "message": "プレミアム解放済み",
     "description": "プレミアム購入済み表示"
   },
+  "premium_unlock_pending": {
+    "message": "購入機能は近日対応予定です",
+    "description": "アンロックボタン押下時 (Stripe 連携未実装) のメッセージ"
+  },
   "notif_daily_title": {
     "message": "きもちを記録しよう",
     "description": "デイリー通知の見出し"
