@@ -1,6 +1,9 @@
 /// <reference types="chrome" />
 
-const STORAGE_KEYS = {
+import { getSettings, STORAGE_KEYS, isValidTimeString } from "./storage.js";
+import { t } from "./i18n.js";
+
+const LEGACY_KEYS = {
   installedAt: "installed_at",
   trialStartTs: "trial_start_ts",
   premiumUnlocked: "premium_unlocked",
@@ -10,32 +13,35 @@ const STORAGE_KEYS = {
 
 const CURRENT_SCHEMA_VERSION = 1;
 
+const DAILY_ALARM_PREFIX = "daily-prompt-";
+const WEEKLY_ALARM_NAME = "weekly-summary";
+
 async function initializeStorage(): Promise<void> {
   const existing = await chrome.storage.local.get([
-    STORAGE_KEYS.installedAt,
-    STORAGE_KEYS.trialStartTs,
-    STORAGE_KEYS.premiumUnlocked,
-    STORAGE_KEYS.schemaVersion,
-    STORAGE_KEYS.entries,
+    LEGACY_KEYS.installedAt,
+    LEGACY_KEYS.trialStartTs,
+    LEGACY_KEYS.premiumUnlocked,
+    LEGACY_KEYS.schemaVersion,
+    LEGACY_KEYS.entries,
   ]);
 
   const now = Date.now();
   const updates: Record<string, unknown> = {};
 
-  if (typeof existing[STORAGE_KEYS.installedAt] !== "number") {
-    updates[STORAGE_KEYS.installedAt] = now;
+  if (typeof existing[LEGACY_KEYS.installedAt] !== "number") {
+    updates[LEGACY_KEYS.installedAt] = now;
   }
-  if (typeof existing[STORAGE_KEYS.trialStartTs] !== "number") {
-    updates[STORAGE_KEYS.trialStartTs] = now;
+  if (typeof existing[LEGACY_KEYS.trialStartTs] !== "number") {
+    updates[LEGACY_KEYS.trialStartTs] = now;
   }
-  if (typeof existing[STORAGE_KEYS.premiumUnlocked] !== "boolean") {
-    updates[STORAGE_KEYS.premiumUnlocked] = false;
+  if (typeof existing[LEGACY_KEYS.premiumUnlocked] !== "boolean") {
+    updates[LEGACY_KEYS.premiumUnlocked] = false;
   }
-  if (typeof existing[STORAGE_KEYS.schemaVersion] !== "number") {
-    updates[STORAGE_KEYS.schemaVersion] = CURRENT_SCHEMA_VERSION;
+  if (typeof existing[LEGACY_KEYS.schemaVersion] !== "number") {
+    updates[LEGACY_KEYS.schemaVersion] = CURRENT_SCHEMA_VERSION;
   }
-  if (!Array.isArray(existing[STORAGE_KEYS.entries])) {
-    updates[STORAGE_KEYS.entries] = [];
+  if (!Array.isArray(existing[LEGACY_KEYS.entries])) {
+    updates[LEGACY_KEYS.entries] = [];
   }
 
   if (Object.keys(updates).length > 0) {
@@ -43,32 +49,18 @@ async function initializeStorage(): Promise<void> {
   }
 }
 
-async function ensureDailyAlarm(): Promise<void> {
-  const existing = await chrome.alarms.get("daily-prompt");
-  if (!existing) {
-    chrome.alarms.create("daily-prompt", {
-      when: nextLocalHour(20),
-      periodInMinutes: 24 * 60,
-    });
-  }
-
-  const weekly = await chrome.alarms.get("weekly-summary");
-  if (!weekly) {
-    chrome.alarms.create("weekly-summary", {
-      when: nextWeeklyAnchor(0, 9),
-      periodInMinutes: 7 * 24 * 60,
-    });
-  }
+function alarmNameFor(time: string): string {
+  return `${DAILY_ALARM_PREFIX}${time.replace(":", "-")}`;
 }
 
-function nextLocalHour(hour: number): number {
+function nextOccurrence(hour: number, minute: number): number {
   const now = new Date();
   const target = new Date(
     now.getFullYear(),
     now.getMonth(),
     now.getDate(),
     hour,
-    0,
+    minute,
     0,
     0,
   );
@@ -76,6 +68,44 @@ function nextLocalHour(hour: number): number {
     target.setDate(target.getDate() + 1);
   }
   return target.getTime();
+}
+
+async function clearDailyAlarms(): Promise<void> {
+  const all = await chrome.alarms.getAll();
+  for (const a of all) {
+    if (a.name.startsWith(DAILY_ALARM_PREFIX)) {
+      await chrome.alarms.clear(a.name);
+    }
+  }
+}
+
+async function syncDailyAlarms(): Promise<void> {
+  await clearDailyAlarms();
+  const settings = await getSettings();
+  if (!settings.notifications_enabled) return;
+  const seen = new Set<string>();
+  for (const time of settings.notification_times) {
+    if (!isValidTimeString(time) || seen.has(time)) continue;
+    seen.add(time);
+    const [hStr, mStr] = time.split(":");
+    const hour = Number(hStr);
+    const minute = Number(mStr);
+    if (!Number.isFinite(hour) || !Number.isFinite(minute)) continue;
+    chrome.alarms.create(alarmNameFor(time), {
+      when: nextOccurrence(hour, minute),
+      periodInMinutes: 24 * 60,
+    });
+  }
+}
+
+async function ensureWeeklyAlarm(): Promise<void> {
+  const weekly = await chrome.alarms.get(WEEKLY_ALARM_NAME);
+  if (!weekly) {
+    chrome.alarms.create(WEEKLY_ALARM_NAME, {
+      when: nextWeeklyAnchor(0, 9),
+      periodInMinutes: 7 * 24 * 60,
+    });
+  }
 }
 
 function nextWeeklyAnchor(weekday: number, hour: number): number {
@@ -91,9 +121,28 @@ function nextWeeklyAnchor(weekday: number, hour: number): number {
   return target.getTime();
 }
 
+function showDailyNotification(): void {
+  const notificationId = `${DAILY_ALARM_PREFIX}${Date.now()}`;
+  chrome.notifications.create(notificationId, {
+    type: "basic",
+    iconUrl: chrome.runtime.getURL("icons/icon128.png"),
+    title: t("notif_daily_title"),
+    message: t("notif_daily_body"),
+    priority: 0,
+    requireInteraction: false,
+    silent: true,
+  });
+}
+
+function handleNotificationClick(notificationId: string): void {
+  if (!notificationId.startsWith(DAILY_ALARM_PREFIX)) return;
+  chrome.notifications.clear(notificationId);
+}
+
 chrome.runtime.onInstalled.addListener(async (details) => {
   await initializeStorage();
-  await ensureDailyAlarm();
+  await syncDailyAlarms();
+  await ensureWeeklyAlarm();
   if (details.reason === "install") {
     console.log("[emotion-checkin] installed");
   } else if (details.reason === "update") {
@@ -102,13 +151,23 @@ chrome.runtime.onInstalled.addListener(async (details) => {
 });
 
 chrome.runtime.onStartup.addListener(async () => {
-  await ensureDailyAlarm();
+  await syncDailyAlarms();
+  await ensureWeeklyAlarm();
 });
 
 chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === "daily-prompt") {
-    // Daily prompt trigger placeholder. Popup-based UI handles display.
-  } else if (alarm.name === "weekly-summary") {
+  if (alarm.name.startsWith(DAILY_ALARM_PREFIX)) {
+    showDailyNotification();
+  } else if (alarm.name === WEEKLY_ALARM_NAME) {
     // Weekly summary trigger placeholder. Handled in popup/options open.
   }
 });
+
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName !== "local") return;
+  if (changes[STORAGE_KEYS.settings]) {
+    void syncDailyAlarms();
+  }
+});
+
+chrome.notifications.onClicked.addListener(handleNotificationClick);

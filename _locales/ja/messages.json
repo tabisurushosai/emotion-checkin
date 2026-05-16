@@ -177,6 +177,14 @@
     "message": "プレミアム解放済み",
     "description": "プレミアム購入済み表示"
   },
+  "notif_daily_title": {
+    "message": "きもちを記録しよう",
+    "description": "デイリー通知の見出し"
+  },
+  "notif_daily_body": {
+    "message": "今のきもちを教えてね 😊",
+    "description": "デイリー通知の本文"
+  },
   "error_generic": {
     "message": "エラーが発生しました",
     "description": "汎用エラー"

@@ -177,6 +177,14 @@
     "message": "Premium unlocked",
     "description": "Premium unlocked label"
   },
+  "notif_daily_title": {
+    "message": "Time to check in",
+    "description": "Daily reminder notification title"
+  },
+  "notif_daily_body": {
+    "message": "How are you feeling right now? 😊",
+    "description": "Daily reminder notification body"
+  },
   "error_generic": {
     "message": "Something went wrong",
     "description": "Generic error"

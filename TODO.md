@@ -24,7 +24,7 @@
 - [x] T017: emoji-picker — 実装
 - [x] T018: emoji-picker — テスト・整合
 - [x] T019: daily-prompt — 設計
-- [ ] T020: daily-prompt — 実装
+- [x] T020: daily-prompt — 実装
 - [ ] T021: daily-prompt — テスト・整合
 - [ ] T022: weekly-summary — 設計
 - [ ] T023: weekly-summary — 実装
