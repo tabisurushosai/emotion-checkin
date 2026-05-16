@@ -28,7 +28,7 @@
 - [x] T021: daily-prompt — テスト・整合
 - [x] T022: weekly-summary — 設計
 - [x] T023: weekly-summary — 実装
-- [ ] T024: weekly-summary — テスト・整合
+- [x] T024: weekly-summary — テスト・整合
 - [ ] T025: parent-share — 設計
 - [ ] T026: parent-share — 実装
 - [ ] T027: parent-share — テスト・整合
