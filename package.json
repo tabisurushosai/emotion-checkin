@@ -9,7 +9,8 @@
     "dev": "vite build --watch",
     "lint": "tsc --noEmit",
     "check:emoji-picker": "node scripts/check-emoji-picker.mjs",
-    "check": "npm run lint && npm run check:emoji-picker",
+    "check:daily-prompt": "node scripts/check-daily-prompt.mjs",
+    "check": "npm run lint && npm run check:emoji-picker && npm run check:daily-prompt",
     "package": "npm run build && node scripts/package.mjs"
   },
   "devDependencies": {
