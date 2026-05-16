@@ -230,6 +230,64 @@
         </div>
       </section>
 
+      <section class="calendar" aria-labelledby="calendar-heading">
+        <header class="calendar__header">
+          <button
+            type="button"
+            id="calendar-prev"
+            class="btn btn--icon"
+            data-i18n-attr="aria-label:calendar_prev,title:calendar_prev"
+            aria-label="前の月"
+          >‹</button>
+          <h2 id="calendar-heading" class="section-title">
+            <span id="calendar-month-label"></span>
+          </h2>
+          <button
+            type="button"
+            id="calendar-next"
+            class="btn btn--icon"
+            data-i18n-attr="aria-label:calendar_next,title:calendar_next"
+            aria-label="次の月"
+          >›</button>
+        </header>
+
+        <ul class="calendar__weekdays" aria-hidden="true">
+          <li data-i18n="day_mon">月</li>
+          <li data-i18n="day_tue">火</li>
+          <li data-i18n="day_wed">水</li>
+          <li data-i18n="day_thu">木</li>
+          <li data-i18n="day_fri">金</li>
+          <li data-i18n="day_sat">土</li>
+          <li data-i18n="day_sun">日</li>
+        </ul>
+
+        <ul id="calendar-grid" class="calendar__grid" role="grid"></ul>
+
+        <p
+          id="calendar-locked-hint"
+          class="calendar__hint"
+          role="note"
+          hidden
+          data-i18n="calendar_locked"
+        >これより前の月は Premium で表示できます</p>
+
+        <section
+          id="calendar-day-detail"
+          class="calendar__detail"
+          aria-live="polite"
+          hidden
+        >
+          <h3 id="calendar-day-detail-label" class="calendar__detail-label"></h3>
+          <ul id="calendar-day-list" class="calendar__detail-list"></ul>
+          <p
+            id="calendar-day-empty"
+            class="calendar__detail-empty"
+            data-i18n="calendar_day_detail_empty"
+            hidden
+          >この日の記録はありません</p>
+        </section>
+      </section>
+
       <footer class="popup__footer">
         <button
           type="button"

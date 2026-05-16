@@ -21,12 +21,52 @@ import {
   type WeeklyStats,
 } from "./weekly";
 import { buildShareMail, type ShareLocale } from "./parentShare";
+import {
+  buildMonthGrid,
+  compareYearMonth,
+  earliestAllowedMonth,
+  entriesForDay,
+  latestAllowedMonth,
+  shiftMonth,
+} from "./calendar";
 
 const SAVED_STATUS_RESET_MS = 2000;
+
+const MONTH_NAMES_JA = [
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+  "10",
+  "11",
+  "12",
+];
+const MONTH_NAMES_EN = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
 
 let selectedEmoji: EmotionKey | null = null;
 let savedStatusTimer: number | null = null;
 let latestStats: WeeklyStats | null = null;
+let viewYear: number = new Date().getFullYear();
+let viewMonth: number = new Date().getMonth();
+let selectedDay: { year: number; month: number; day: number } | null = null;
 
 function resolveShareLocale(): ShareLocale {
   const ui = chrome.i18n.getUILanguage?.() ?? "";
@@ -287,11 +327,270 @@ async function handleSave(): Promise<void> {
     resetForm();
     await refreshToday();
     await refreshWeekly();
+    await refreshCalendar();
   } catch (err) {
     console.error("[emotion-checkin] save failed", err);
     setStatus(t("error_save"));
     if (saveBtn) saveBtn.disabled = false;
   }
+}
+
+function formatMonthLabel(
+  year: number,
+  month: number,
+  locale: ShareLocale,
+): string {
+  const names = locale === "ja" ? MONTH_NAMES_JA : MONTH_NAMES_EN;
+  return t("calendar_month_label", [String(year), names[month]]);
+}
+
+function formatDayLabel(
+  year: number,
+  month: number,
+  day: number,
+  locale: ShareLocale,
+): string {
+  if (locale === "ja") return `${year} 年 ${month + 1} 月 ${day} 日`;
+  return `${MONTH_NAMES_EN[month]} ${day}, ${year}`;
+}
+
+function isSameYearMonthDay(
+  a: { year: number; month: number; day: number } | null,
+  y: number,
+  m: number,
+  d: number,
+): boolean {
+  return !!a && a.year === y && a.month === m && a.day === d;
+}
+
+function isToday(y: number, m: number, d: number): boolean {
+  const now = new Date();
+  return (
+    now.getFullYear() === y && now.getMonth() === m && now.getDate() === d
+  );
+}
+
+async function refreshCalendar(): Promise<void> {
+  const entries = await getEntries();
+  const grid = buildMonthGrid(entries, viewYear, viewMonth);
+  renderCalendar(grid);
+  updateCalendarNav();
+  if (selectedDay) {
+    await renderDayDetail(
+      entries,
+      selectedDay.year,
+      selectedDay.month,
+      selectedDay.day,
+    );
+  }
+}
+
+function renderCalendar(grid: ReturnType<typeof buildMonthGrid>): void {
+  const locale = resolveShareLocale();
+  const monthLabel = document.getElementById("calendar-month-label");
+  if (monthLabel) {
+    monthLabel.textContent = formatMonthLabel(grid.year, grid.month, locale);
+  }
+
+  const list = document.getElementById("calendar-grid") as HTMLUListElement | null;
+  if (!list) return;
+  list.innerHTML = "";
+
+  const frag = document.createDocumentFragment();
+  for (const week of grid.weeks) {
+    for (const cell of week) {
+      const li = document.createElement("li");
+      li.className = "calendar__cell";
+      li.setAttribute("role", "gridcell");
+      if (!cell.inMonth) li.classList.add("is-outside");
+      if (isToday(cell.year, cell.month, cell.day)) li.classList.add("is-today");
+      if (isSameYearMonthDay(selectedDay, cell.year, cell.month, cell.day)) {
+        li.classList.add("is-selected");
+      }
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "calendar__cell-btn";
+      btn.disabled = !cell.inMonth;
+
+      const dateLabelParts: string[] = [
+        formatDayLabel(cell.year, cell.month, cell.day, locale),
+      ];
+      if (cell.count > 0 && cell.topEmoji) {
+        dateLabelParts.push(`${cell.count}`);
+        dateLabelParts.push(t(EMOJI_LABEL_KEY[cell.topEmoji]));
+      } else {
+        dateLabelParts.push(t("calendar_day_detail_empty"));
+      }
+      btn.setAttribute("aria-label", dateLabelParts.join(" "));
+
+      const date = document.createElement("span");
+      date.className = "calendar__date";
+      date.textContent = String(cell.day);
+      btn.append(date);
+
+      const emoji = document.createElement("span");
+      emoji.className = "calendar__cell-emoji";
+      emoji.setAttribute("aria-hidden", "true");
+      emoji.textContent = cell.topEmoji ? EMOJI_GLYPH[cell.topEmoji] : "";
+      btn.append(emoji);
+
+      const count = document.createElement("span");
+      count.className = "calendar__cell-count";
+      count.setAttribute("aria-hidden", "true");
+      count.textContent = cell.count > 0 ? String(cell.count) : "";
+      btn.append(count);
+
+      if (cell.inMonth) {
+        btn.addEventListener("click", () => {
+          void openDayDetail(cell.year, cell.month, cell.day);
+        });
+      }
+
+      li.append(btn);
+      frag.append(li);
+    }
+  }
+  list.append(frag);
+}
+
+function updateCalendarNav(): void {
+  const prev = document.getElementById("calendar-prev") as HTMLButtonElement | null;
+  const next = document.getElementById("calendar-next") as HTMLButtonElement | null;
+  const hint = document.getElementById("calendar-locked-hint") as HTMLElement | null;
+  const now = new Date();
+  const earliest = earliestAllowedMonth(now);
+  const latest = latestAllowedMonth(now);
+
+  if (prev) {
+    const prevShift = shiftMonth(viewYear, viewMonth, -1);
+    prev.disabled = compareYearMonth(prevShift, earliest) < 0;
+  }
+  if (next) {
+    const nextShift = shiftMonth(viewYear, viewMonth, 1);
+    next.disabled = compareYearMonth(nextShift, latest) > 0;
+  }
+  if (hint) hint.hidden = true;
+}
+
+async function openDayDetail(
+  year: number,
+  month: number,
+  day: number,
+): Promise<void> {
+  selectedDay = { year, month, day };
+  const entries = await getEntries();
+  await renderDayDetail(entries, year, month, day);
+
+  document
+    .querySelectorAll<HTMLLIElement>("#calendar-grid .calendar__cell")
+    .forEach((li) => li.classList.remove("is-selected"));
+
+  const list = document.getElementById("calendar-grid");
+  if (list) {
+    const buttons = list.querySelectorAll<HTMLButtonElement>(
+      ".calendar__cell-btn",
+    );
+    buttons.forEach((btn) => {
+      const parent = btn.parentElement;
+      if (!parent) return;
+      const date = parent.querySelector(".calendar__date");
+      if (!date) return;
+      if (date.textContent === String(day) && !parent.classList.contains("is-outside")) {
+        parent.classList.add("is-selected");
+      }
+    });
+  }
+
+  const detail = document.getElementById("calendar-day-detail") as HTMLElement | null;
+  if (detail) {
+    detail.hidden = false;
+    detail.scrollIntoView({ behavior: "instant" as ScrollBehavior, block: "nearest" });
+  }
+}
+
+async function renderDayDetail(
+  entries: Entry[],
+  year: number,
+  month: number,
+  day: number,
+): Promise<void> {
+  const locale = resolveShareLocale();
+  const label = document.getElementById("calendar-day-detail-label");
+  const list = document.getElementById("calendar-day-list") as HTMLUListElement | null;
+  const empty = document.getElementById("calendar-day-empty") as HTMLElement | null;
+  if (!label || !list || !empty) return;
+
+  label.textContent = formatDayLabel(year, month, day, locale);
+
+  const dayEntries = entriesForDay(entries, year, month, day);
+  list.innerHTML = "";
+  if (dayEntries.length === 0) {
+    empty.hidden = false;
+    return;
+  }
+  empty.hidden = true;
+
+  const frag = document.createDocumentFragment();
+  for (const entry of dayEntries) {
+    const li = document.createElement("li");
+
+    const emoji = document.createElement("span");
+    emoji.className = "calendar__detail-emoji";
+    emoji.setAttribute("aria-hidden", "true");
+    emoji.textContent = EMOJI_GLYPH[entry.emoji];
+    li.append(emoji);
+
+    const labelText = document.createElement("span");
+    labelText.textContent = t(EMOJI_LABEL_KEY[entry.emoji]);
+    li.append(labelText);
+
+    const time = document.createElement("time");
+    time.className = "calendar__detail-time";
+    time.dateTime = new Date(entry.ts).toISOString();
+    time.textContent = formatClock(entry.ts);
+    li.append(time);
+
+    if (entry.note) {
+      const note = document.createElement("p");
+      note.className = "calendar__detail-note";
+      note.textContent = entry.note;
+      li.append(note);
+    }
+
+    frag.append(li);
+  }
+  list.append(frag);
+}
+
+function handlePrevMonth(): void {
+  const now = new Date();
+  const earliest = earliestAllowedMonth(now);
+  const next = shiftMonth(viewYear, viewMonth, -1);
+  if (compareYearMonth(next, earliest) < 0) {
+    const hint = document.getElementById("calendar-locked-hint");
+    if (hint) hint.hidden = false;
+    return;
+  }
+  viewYear = next.year;
+  viewMonth = next.month;
+  selectedDay = null;
+  const detail = document.getElementById("calendar-day-detail") as HTMLElement | null;
+  if (detail) detail.hidden = true;
+  void refreshCalendar();
+}
+
+function handleNextMonth(): void {
+  const now = new Date();
+  const latest = latestAllowedMonth(now);
+  const next = shiftMonth(viewYear, viewMonth, 1);
+  if (compareYearMonth(next, latest) > 0) return;
+  viewYear = next.year;
+  viewMonth = next.month;
+  selectedDay = null;
+  const detail = document.getElementById("calendar-day-detail") as HTMLElement | null;
+  if (detail) detail.hidden = true;
+  void refreshCalendar();
 }
 
 function moveSelection(currentIndex: number, delta: number): void {
@@ -349,6 +648,12 @@ function bindActions(): void {
   document.getElementById("share-parent-btn")?.addEventListener("click", () => {
     void handleShareClick();
   });
+  document.getElementById("calendar-prev")?.addEventListener("click", () => {
+    handlePrevMonth();
+  });
+  document.getElementById("calendar-next")?.addEventListener("click", () => {
+    handleNextMonth();
+  });
 }
 
 function bootstrap(): void {
@@ -363,6 +668,7 @@ function bootstrap(): void {
   bindActions();
   void refreshToday();
   void refreshWeekly();
+  void refreshCalendar();
 }
 
 if (document.readyState === "loading") {

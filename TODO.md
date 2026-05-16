@@ -33,7 +33,7 @@
 - [x] T026: parent-share — 実装
 - [x] T027: parent-share — テスト・整合
 - [x] T028: calendar-view — 設計
-- [ ] T029: calendar-view — 実装
+- [x] T029: calendar-view — 実装
 - [ ] T030: calendar-view — テスト・整合
 
 ## Phase 4: Premium ゲート (T031-T033)

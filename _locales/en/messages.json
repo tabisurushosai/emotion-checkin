@@ -139,6 +139,28 @@
     "message": "Next month",
     "description": "Next month button"
   },
+  "calendar_month_label": {
+    "message": "$MONTH$ $YEAR$",
+    "description": "Calendar month heading",
+    "placeholders": {
+      "year": {
+        "content": "$1",
+        "example": "2026"
+      },
+      "month": {
+        "content": "$2",
+        "example": "May"
+      }
+    }
+  },
+  "calendar_day_detail_empty": {
+    "message": "No check-ins on this day",
+    "description": "Message shown when the selected day has no entries"
+  },
+  "calendar_locked": {
+    "message": "Earlier months require Premium",
+    "description": "Hint shown when navigating past the Free plan limit"
+  },
   "premium_title": {
     "message": "Premium features",
     "description": "Premium heading"

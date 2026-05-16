@@ -139,6 +139,28 @@
     "message": "次の月",
     "description": "次月ボタン"
   },
+  "calendar_month_label": {
+    "message": "$YEAR$ 年 $MONTH$ 月",
+    "description": "カレンダーの月見出し",
+    "placeholders": {
+      "year": {
+        "content": "$1",
+        "example": "2026"
+      },
+      "month": {
+        "content": "$2",
+        "example": "5"
+      }
+    }
+  },
+  "calendar_day_detail_empty": {
+    "message": "この日の記録はありません",
+    "description": "選択日に記録が無いときのメッセージ"
+  },
+  "calendar_locked": {
+    "message": "これより前の月は Premium で表示できます",
+    "description": "Free プランで遡れる上限を超えたときのヒント"
+  },
   "premium_title": {
     "message": "プレミアム機能",
     "description": "プレミアム見出し"
