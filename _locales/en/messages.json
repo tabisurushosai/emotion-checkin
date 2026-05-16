@@ -185,6 +185,66 @@
     "message": "How are you feeling right now? 😊",
     "description": "Daily reminder notification body"
   },
+  "notif_weekly_title": {
+    "message": "Share this week's summary",
+    "description": "Weekly share reminder notification title"
+  },
+  "notif_weekly_body": {
+    "message": "Open popup to send to your parent",
+    "description": "Weekly share reminder notification body"
+  },
+  "parent_share_button": {
+    "message": "Share with parent",
+    "description": "Share-with-parent button"
+  },
+  "parent_share_subject": {
+    "message": "Weekly check-in summary ($DATE$)",
+    "description": "Parent share email subject",
+    "placeholders": {
+      "date": {
+        "content": "$1",
+        "example": "2026-05-11"
+      }
+    }
+  },
+  "parent_share_body_intro": {
+    "message": "Weekly check-ins ($START$ — $END$)",
+    "description": "Parent share email intro",
+    "placeholders": {
+      "start": {
+        "content": "$1",
+        "example": "2026-05-11"
+      },
+      "end": {
+        "content": "$2",
+        "example": "2026-05-17"
+      }
+    }
+  },
+  "parent_share_body_total": {
+    "message": "Check-ins",
+    "description": "Parent share email total label"
+  },
+  "parent_share_body_top": {
+    "message": "Most frequent mood",
+    "description": "Parent share email top mood label"
+  },
+  "parent_share_body_by_day": {
+    "message": "By day",
+    "description": "Parent share email by-day heading"
+  },
+  "parent_share_body_by_emoji": {
+    "message": "By mood",
+    "description": "Parent share email by-mood heading"
+  },
+  "parent_share_body_footer": {
+    "message": "— From Mood Check-in (Chrome ext.)",
+    "description": "Parent share email footer"
+  },
+  "parent_share_no_email": {
+    "message": "Set the parent's email in Options",
+    "description": "Hint shown when parent email is missing"
+  },
   "error_generic": {
     "message": "Something went wrong",
     "description": "Generic error"

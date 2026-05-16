@@ -1,6 +1,12 @@
 /// <reference types="chrome" />
 
-import { getSettings, STORAGE_KEYS, isValidTimeString } from "./storage.js";
+import {
+  getEntries,
+  getSettings,
+  STORAGE_KEYS,
+  isValidTimeString,
+} from "./storage.js";
+import { computeWeeklyStats } from "./weekly.js";
 import { t } from "./i18n.js";
 
 const LEGACY_KEYS = {
@@ -15,6 +21,7 @@ const CURRENT_SCHEMA_VERSION = 1;
 
 const DAILY_ALARM_PREFIX = "daily-prompt-";
 const WEEKLY_ALARM_NAME = "weekly-summary";
+const WEEKLY_NOTIFICATION_PREFIX = "weekly-share-";
 
 async function initializeStorage(): Promise<void> {
   const existing = await chrome.storage.local.get([
@@ -134,8 +141,32 @@ function showDailyNotification(): void {
   });
 }
 
+async function showWeeklyShareNotification(): Promise<void> {
+  const settings = await getSettings();
+  if (!settings.weekly_summary_enabled) return;
+  if (!settings.parent_email) return;
+  const entries = await getEntries();
+  const stats = computeWeeklyStats(entries);
+  if (stats.total === 0) return;
+  const notificationId = `${WEEKLY_NOTIFICATION_PREFIX}${Date.now()}`;
+  chrome.notifications.create(notificationId, {
+    type: "basic",
+    iconUrl: chrome.runtime.getURL("icons/icon128.png"),
+    title: t("notif_weekly_title"),
+    message: t("notif_weekly_body"),
+    priority: 0,
+    requireInteraction: false,
+    silent: true,
+  });
+}
+
 function handleNotificationClick(notificationId: string): void {
-  if (!notificationId.startsWith(DAILY_ALARM_PREFIX)) return;
+  if (
+    !notificationId.startsWith(DAILY_ALARM_PREFIX) &&
+    !notificationId.startsWith(WEEKLY_NOTIFICATION_PREFIX)
+  ) {
+    return;
+  }
   chrome.notifications.clear(notificationId);
 }
 
@@ -159,7 +190,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name.startsWith(DAILY_ALARM_PREFIX)) {
     showDailyNotification();
   } else if (alarm.name === WEEKLY_ALARM_NAME) {
-    // Weekly summary trigger placeholder. Handled in popup/options open.
+    void showWeeklyShareNotification();
   }
 });
 
@@ -167,6 +198,7 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName !== "local") return;
   if (changes[STORAGE_KEYS.settings]) {
     void syncDailyAlarms();
+    void ensureWeeklyAlarm();
   }
 });
 

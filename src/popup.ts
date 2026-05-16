@@ -10,6 +10,7 @@ import {
 import {
   addEntry,
   getEntries,
+  getSettings,
   isEmotionKey,
   NOTE_MAX_LENGTH,
   type Entry,
@@ -19,11 +20,18 @@ import {
   WEEKDAY_KEYS,
   type WeeklyStats,
 } from "./weekly";
+import { buildShareMail, type ShareLocale } from "./parentShare";
 
 const SAVED_STATUS_RESET_MS = 2000;
 
 let selectedEmoji: EmotionKey | null = null;
 let savedStatusTimer: number | null = null;
+let latestStats: WeeklyStats | null = null;
+
+function resolveShareLocale(): ShareLocale {
+  const ui = chrome.i18n.getUILanguage?.() ?? "";
+  return ui.toLowerCase().startsWith("ja") ? "ja" : "en";
+}
 
 function startOfTodayMs(): number {
   const now = new Date();
@@ -193,7 +201,57 @@ function renderWeekly(stats: WeeklyStats): void {
 
 async function refreshWeekly(): Promise<void> {
   const entries = await getEntries();
-  renderWeekly(computeWeeklyStats(entries));
+  const stats = computeWeeklyStats(entries);
+  latestStats = stats;
+  renderWeekly(stats);
+  await refreshShareButton();
+}
+
+async function refreshShareButton(): Promise<void> {
+  const btn = document.getElementById(
+    "share-parent-btn",
+  ) as HTMLButtonElement | null;
+  const hint = document.getElementById(
+    "share-parent-hint",
+  ) as HTMLElement | null;
+  if (!btn || !hint) return;
+
+  const settings = await getSettings();
+  const total = latestStats?.total ?? 0;
+
+  if (!settings.parent_email) {
+    btn.disabled = true;
+    hint.hidden = false;
+    hint.textContent = t("parent_share_no_email");
+    return;
+  }
+  if (total === 0) {
+    btn.disabled = true;
+    hint.hidden = false;
+    hint.textContent = t("popup_no_records");
+    return;
+  }
+  btn.disabled = false;
+  hint.hidden = true;
+  hint.textContent = "";
+}
+
+async function handleShareClick(): Promise<void> {
+  const settings = await getSettings();
+  if (!settings.parent_email) return;
+  const stats = latestStats ?? computeWeeklyStats(await getEntries());
+  if (stats.total === 0) return;
+  const mail = buildShareMail(stats, settings.parent_email, resolveShareLocale());
+  if (!mail.mailtoUrl) {
+    setStatus(t("error_generic"));
+    return;
+  }
+  try {
+    window.location.href = mail.mailtoUrl;
+  } catch (err) {
+    console.error("[emotion-checkin] share failed", err);
+    setStatus(t("error_generic"));
+  }
 }
 
 function resetForm(): void {
@@ -287,6 +345,9 @@ function bindActions(): void {
     if (chrome.runtime.openOptionsPage) {
       chrome.runtime.openOptionsPage();
     }
+  });
+  document.getElementById("share-parent-btn")?.addEventListener("click", () => {
+    void handleShareClick();
   });
 }
 
