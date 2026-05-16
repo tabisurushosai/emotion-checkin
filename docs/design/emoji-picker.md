@@ -54,13 +54,24 @@ T016 (Phase 3 / コア機能 1/5)。T017 実装・T018 整合の基準となる�
 3. `handleSave()`: `addEntry()` → `setStatus(popup_saved)` → `resetForm()` → `refreshToday()`。
 
 ## 受け入れ条件 (T018 で確認)
-- [ ] 6種すべてが click / Space / Enter で選択可能、`aria-checked` が排他的に true になる。
-- [ ] 未選択時は保存 disabled。選択後は enable。
-- [ ] 保存後、`chrome.storage.local.entries` に `Entry` が追記されている。
-- [ ] 保存後、今日の記録に最新が最上段で表示され、メモがあれば本文も出る。
-- [ ] 失敗時に `error_save` が表示され、ボタンが再 enable される。
-- [ ] ja / en どちらの locale でもラベルが切り替わる。
-- [ ] light / dark どちらのテーマでもコントラストが取れている。
+- [x] 6種すべてが click / Space / Enter で選択可能、`aria-checked` が排他的に true になる。 — popup.ts:188-222 で全 emoji ボタンに click + keydown(Space/Enter/Arrow/Home/End) を bind、`updateSelection` が `aria-checked` を排他更新。`scripts/check-emoji-picker.mjs` で 6 ボタン + radiogroup を静的検証。
+- [x] 未選択時は保存 disabled。選択後は enable。 — popup.html:124 `<button id="save-btn" ... disabled>`、popup.ts:67 で選択時 enable、check スクリプトで disabled 初期値を検証。
+- [x] 保存後、`chrome.storage.local.entries` に `Entry` が追記されている。 — popup.ts:170 `addEntry()` (storage.ts:111) 経由のみ。check スクリプトで `chrome.storage.local.*` 直接呼び出しがないことを検証。
+- [x] 保存後、今日の記録に最新が最上段で表示され、メモがあれば本文も出る。 — popup.ts:94-95 `sort((a,b)=>b.ts-a.ts)`、popup.ts:125-130 で `entry.note` 有時のみ `<p class="today__note">` を追加。
+- [x] 失敗時に `error_save` が表示され、ボタンが再 enable される。 — popup.ts:174-178 で catch → `setStatus(t("error_save"))` + 保存ボタン再 enable。check スクリプトで `error_save` が ja/en 両方に存在することを検証。
+- [x] ja / en どちらの locale でもラベルが切り替わる。 — `EMOJI_LABEL_KEY` の `emoji_*` キーが ja/en messages.json の両方に存在することを check スクリプトで検証。
+- [ ] light / dark どちらのテーマでもコントラストが取れている。 — popup.css の `prefers-color-scheme` ルールで実装済 (T012)。実機での視覚確認は手動 (本タスクの自動検証対象外)。
+
+### 静的整合チェッカ
+`npm run check:emoji-picker` (= `node scripts/check-emoji-picker.mjs`) で以下を毎回検証:
+- `EMOTION_KEYS` (storage.ts) ⇔ `EMOJI_GLYPH` / `EMOJI_LABEL_KEY` (emoji.ts) の集合一致
+- popup.html の `data-emoji=*` ボタンが 6種揃っているか + `role="radio"` 必須
+- popup.html ラッパー `role="radiogroup"` + textarea `maxlength` = `NOTE_MAX_LENGTH`
+- save-btn 初期 disabled / save-status `role="status"`
+- ja/en messages.json に `emoji_*` + `popup_*` + `error_save` が揃っているか
+- popup.ts が `chrome.storage.local` を直接触らず、storage.ts / emoji.ts 経由になっているか
+
+`npm run check` で `lint` (tsc --noEmit) と同時実行可能。
 
 ## T017 で行うリファクタ予定
 - popup.ts の `loadEntries / saveEntry` をローカル定義から削除し、`storage.ts` の `getEntries / addEntry` に置換 (二重実装解消)。
