@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title data-i18n="appName">きもち記録</title>
+    <link rel="stylesheet" href="./popup.css" />
+  </head>
+  <body>
+    <main class="popup">
+      <header class="popup__header">
+        <h1 class="popup__title" data-i18n="popup_title">今のきもちは?</h1>
+        <p class="popup__subtitle" data-i18n="popup_subtitle">
+          絵文字をタップして記録しよう
+        </p>
+      </header>
+
+      <section class="emoji-picker" aria-labelledby="emoji-picker-label">
+        <h2 id="emoji-picker-label" class="visually-hidden" data-i18n="popup_title">
+          今のきもちは?
+        </h2>
+        <ul class="emoji-picker__list" role="radiogroup">
+          <li>
+            <button
+              type="button"
+              class="emoji-btn"
+              role="radio"
+              aria-checked="false"
+              data-emoji="happy"
+              data-i18n-attr="aria-label:emoji_happy,title:emoji_happy"
+            >
+              <span class="emoji-btn__icon" aria-hidden="true">😊</span>
+              <span class="emoji-btn__label" data-i18n="emoji_happy">うれしい</span>
+            </button>
+          </li>
+          <li>
+            <button
+              type="button"
+              class="emoji-btn"
+              role="radio"
+              aria-checked="false"
+              data-emoji="calm"
+              data-i18n-attr="aria-label:emoji_calm,title:emoji_calm"
+            >
+              <span class="emoji-btn__icon" aria-hidden="true">😌</span>
+              <span class="emoji-btn__label" data-i18n="emoji_calm">おだやか</span>
+            </button>
+          </li>
+          <li>
+            <button
+              type="button"
+              class="emoji-btn"
+              role="radio"
+              aria-checked="false"
+              data-emoji="tired"
+              data-i18n-attr="aria-label:emoji_tired,title:emoji_tired"
+            >
+              <span class="emoji-btn__icon" aria-hidden="true">😪</span>
+              <span class="emoji-btn__label" data-i18n="emoji_tired">つかれた</span>
+            </button>
+          </li>
+          <li>
+            <button
+              type="button"
+              class="emoji-btn"
+              role="radio"
+              aria-checked="false"
+              data-emoji="sad"
+              data-i18n-attr="aria-label:emoji_sad,title:emoji_sad"
+            >
+              <span class="emoji-btn__icon" aria-hidden="true">😢</span>
+              <span class="emoji-btn__label" data-i18n="emoji_sad">かなしい</span>
+            </button>
+          </li>
+          <li>
+            <button
+              type="button"
+              class="emoji-btn"
+              role="radio"
+              aria-checked="false"
+              data-emoji="angry"
+              data-i18n-attr="aria-label:emoji_angry,title:emoji_angry"
+            >
+              <span class="emoji-btn__icon" aria-hidden="true">😠</span>
+              <span class="emoji-btn__label" data-i18n="emoji_angry">いらいら</span>
+            </button>
+          </li>
+          <li>
+            <button
+              type="button"
+              class="emoji-btn"
+              role="radio"
+              aria-checked="false"
+              data-emoji="anxious"
+              data-i18n-attr="aria-label:emoji_anxious,title:emoji_anxious"
+            >
+              <span class="emoji-btn__icon" aria-hidden="true">😰</span>
+              <span class="emoji-btn__label" data-i18n="emoji_anxious">ふあん</span>
+            </button>
+          </li>
+        </ul>
+      </section>
+
+      <section class="note">
+        <label for="note-input" class="visually-hidden" data-i18n="popup_note_placeholder">
+          メモ (任意)
+        </label>
+        <textarea
+          id="note-input"
+          class="note__input"
+          rows="2"
+          maxlength="200"
+          data-i18n-attr="placeholder:popup_note_placeholder"
+          placeholder="メモ (任意)"
+        ></textarea>
+      </section>
+
+      <div class="actions">
+        <button
+          type="button"
+          id="save-btn"
+          class="btn btn--primary"
+          data-i18n="popup_save"
+          disabled
+        >
+          保存
+        </button>
+        <p
+          id="save-status"
+          class="actions__status"
+          role="status"
+          aria-live="polite"
+        ></p>
+      </div>
+
+      <section class="today" aria-labelledby="today-heading">
+        <h2 id="today-heading" class="section-title" data-i18n="popup_today">
+          今日の記録
+        </h2>
+        <ul id="today-list" class="today__list"></ul>
+        <p
+          id="today-empty"
+          class="today__empty"
+          data-i18n="popup_no_records"
+          hidden
+        >
+          まだ記録がありません
+        </p>
+      </section>
+
+      <footer class="popup__footer">
+        <button
+          type="button"
+          id="open-options"
+          class="btn btn--link"
+          data-i18n="options_title"
+        >
+          設定
+        </button>
+      </footer>
+    </main>
+
+    <script type="module" src="./popup.ts"></script>
+  </body>
+</html>
