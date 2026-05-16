@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title data-i18n="options_title">設定</title>
+    <link rel="stylesheet" href="./options.css" />
+  </head>
+  <body>
+    <main class="options">
+      <header class="options__header">
+        <h1 class="options__title" data-i18n="options_title">設定</h1>
+      </header>
+
+      <section class="card" aria-labelledby="sec-notification">
+        <h2 id="sec-notification" class="card__title" data-i18n="options_notification">
+          通知
+        </h2>
+
+        <div class="field field--row">
+          <label class="switch" for="opt-notif-enabled">
+            <input type="checkbox" id="opt-notif-enabled" />
+            <span class="switch__label" data-i18n="options_notification_enable">
+              リマインダー通知を有効にする
+            </span>
+          </label>
+        </div>
+
+        <div class="field">
+          <label
+            class="field__label"
+            for="opt-notif-times"
+            data-i18n="options_notification_times"
+          >
+            通知時刻
+          </label>
+          <input
+            type="text"
+            id="opt-notif-times"
+            class="input"
+            inputmode="numeric"
+            placeholder="09:00, 13:00, 20:00"
+            aria-describedby="opt-notif-times-hint"
+          />
+          <p id="opt-notif-times-hint" class="field__hint">
+            HH:MM, HH:MM ...
+          </p>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="sec-parent">
+        <h2 id="sec-parent" class="card__title" data-i18n="options_parent_share">
+          保護者への共有
+        </h2>
+
+        <div class="field">
+          <label
+            class="field__label"
+            for="opt-parent-email"
+            data-i18n="options_parent_email"
+          >
+            保護者のメールアドレス
+          </label>
+          <input
+            type="email"
+            id="opt-parent-email"
+            class="input"
+            autocomplete="off"
+            placeholder="example@example.com"
+          />
+        </div>
+
+        <div class="field field--row">
+          <label class="switch" for="opt-weekly-enabled">
+            <input type="checkbox" id="opt-weekly-enabled" />
+            <span class="switch__label" data-i18n="options_weekly_summary">
+              週次サマリー
+            </span>
+          </label>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="sec-data">
+        <h2 id="sec-data" class="card__title" data-i18n="popup_history">
+          データ
+        </h2>
+
+        <div class="field field--row field--wrap">
+          <button
+            type="button"
+            id="btn-export"
+            class="btn btn--secondary"
+            data-i18n="options_export"
+          >
+            データをエクスポート
+          </button>
+          <button
+            type="button"
+            id="btn-import"
+            class="btn btn--secondary"
+            data-i18n="options_import"
+          >
+            データをインポート
+          </button>
+          <input
+            type="file"
+            id="file-import"
+            class="visually-hidden"
+            accept="application/json,.json"
+          />
+          <button
+            type="button"
+            id="btn-reset"
+            class="btn btn--danger"
+            data-i18n="options_reset"
+          >
+            すべての記録を削除
+          </button>
+        </div>
+      </section>
+
+      <div class="footer">
+        <button
+          type="button"
+          id="btn-save"
+          class="btn btn--primary"
+          data-i18n="options_save"
+        >
+          設定を保存
+        </button>
+        <p
+          id="save-status"
+          class="footer__status"
+          role="status"
+          aria-live="polite"
+        ></p>
+      </div>
+    </main>
+
+    <script type="module" src="./options.ts"></script>
+  </body>
+</html>
