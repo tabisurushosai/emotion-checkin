@@ -34,7 +34,7 @@
 - [x] T027: parent-share — テスト・整合
 - [x] T028: calendar-view — 設計
 - [x] T029: calendar-view — 実装
-- [ ] T030: calendar-view — テスト・整合
+- [x] T030: calendar-view — テスト・整合
 
 ## Phase 4: Premium ゲート (T031-T033)
 - [ ] T031: src/premium.ts (trial_start_ts 管理、is_premium / is_trial 判定関数)

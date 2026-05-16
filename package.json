@@ -12,7 +12,8 @@
     "check:daily-prompt": "node scripts/check-daily-prompt.mjs",
     "check:weekly-summary": "node scripts/check-weekly-summary.mjs",
     "check:parent-share": "node scripts/check-parent-share.mjs",
-    "check": "npm run lint && npm run check:emoji-picker && npm run check:daily-prompt && npm run check:weekly-summary && npm run check:parent-share",
+    "check:calendar-view": "node scripts/check-calendar-view.mjs",
+    "check": "npm run lint && npm run check:emoji-picker && npm run check:daily-prompt && npm run check:weekly-summary && npm run check:parent-share && npm run check:calendar-view",
     "package": "npm run build && node scripts/package.mjs"
   },
   "devDependencies": {
