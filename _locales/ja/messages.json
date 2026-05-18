@@ -67,10 +67,6 @@
     "message": "設定",
     "description": "オプション画面の見出し"
   },
-  "options_language": {
-    "message": "言語",
-    "description": "言語設定"
-  },
   "options_notification": {
     "message": "通知",
     "description": "通知設定"
@@ -138,10 +134,6 @@
   "weekly_top_emotion": {
     "message": "一番多いきもち",
     "description": "最頻感情ラベル"
-  },
-  "calendar_title": {
-    "message": "カレンダー",
-    "description": "カレンダービュー見出し"
   },
   "calendar_prev": {
     "message": "前の月",

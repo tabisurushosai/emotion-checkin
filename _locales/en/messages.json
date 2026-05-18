@@ -67,10 +67,6 @@
     "message": "Settings",
     "description": "Options page heading"
   },
-  "options_language": {
-    "message": "Language",
-    "description": "Language setting"
-  },
   "options_notification": {
     "message": "Notifications",
     "description": "Notification setting"
@@ -138,10 +134,6 @@
   "weekly_top_emotion": {
     "message": "Most frequent mood",
     "description": "Top emotion label"
-  },
-  "calendar_title": {
-    "message": "Calendar",
-    "description": "Calendar view heading"
   },
   "calendar_prev": {
     "message": "Previous month",

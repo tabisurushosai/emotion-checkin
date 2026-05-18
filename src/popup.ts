@@ -789,7 +789,11 @@ function bindActions(): void {
   });
   document.getElementById("open-options")?.addEventListener("click", () => {
     if (chrome.runtime.openOptionsPage) {
-      chrome.runtime.openOptionsPage();
+      try {
+        chrome.runtime.openOptionsPage();
+      } catch (err) {
+        console.error("[emotion-checkin] openOptionsPage failed", err);
+      }
     }
   });
   document.getElementById("share-parent-btn")?.addEventListener("click", () => {

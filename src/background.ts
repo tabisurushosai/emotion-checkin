@@ -45,35 +45,39 @@ const WEEKLY_NOTIFICATION_PREFIX = "weekly-share-";
  * keys without losing existing data.
  */
 async function initializeStorage(): Promise<void> {
-  const existing = await chrome.storage.local.get([
-    LEGACY_KEYS.installedAt,
-    LEGACY_KEYS.trialStartTs,
-    LEGACY_KEYS.premiumUnlocked,
-    LEGACY_KEYS.schemaVersion,
-    LEGACY_KEYS.entries,
-  ]);
+  try {
+    const existing = await chrome.storage.local.get([
+      LEGACY_KEYS.installedAt,
+      LEGACY_KEYS.trialStartTs,
+      LEGACY_KEYS.premiumUnlocked,
+      LEGACY_KEYS.schemaVersion,
+      LEGACY_KEYS.entries,
+    ]);
 
-  const now = Date.now();
-  const updates: Record<string, unknown> = {};
+    const now = Date.now();
+    const updates: Record<string, unknown> = {};
 
-  if (typeof existing[LEGACY_KEYS.installedAt] !== "number") {
-    updates[LEGACY_KEYS.installedAt] = now;
-  }
-  if (typeof existing[LEGACY_KEYS.trialStartTs] !== "number") {
-    updates[LEGACY_KEYS.trialStartTs] = now;
-  }
-  if (typeof existing[LEGACY_KEYS.premiumUnlocked] !== "boolean") {
-    updates[LEGACY_KEYS.premiumUnlocked] = false;
-  }
-  if (typeof existing[LEGACY_KEYS.schemaVersion] !== "number") {
-    updates[LEGACY_KEYS.schemaVersion] = CURRENT_SCHEMA_VERSION;
-  }
-  if (!Array.isArray(existing[LEGACY_KEYS.entries])) {
-    updates[LEGACY_KEYS.entries] = [];
-  }
+    if (typeof existing[LEGACY_KEYS.installedAt] !== "number") {
+      updates[LEGACY_KEYS.installedAt] = now;
+    }
+    if (typeof existing[LEGACY_KEYS.trialStartTs] !== "number") {
+      updates[LEGACY_KEYS.trialStartTs] = now;
+    }
+    if (typeof existing[LEGACY_KEYS.premiumUnlocked] !== "boolean") {
+      updates[LEGACY_KEYS.premiumUnlocked] = false;
+    }
+    if (typeof existing[LEGACY_KEYS.schemaVersion] !== "number") {
+      updates[LEGACY_KEYS.schemaVersion] = CURRENT_SCHEMA_VERSION;
+    }
+    if (!Array.isArray(existing[LEGACY_KEYS.entries])) {
+      updates[LEGACY_KEYS.entries] = [];
+    }
 
-  if (Object.keys(updates).length > 0) {
-    await chrome.storage.local.set(updates);
+    if (Object.keys(updates).length > 0) {
+      await chrome.storage.local.set(updates);
+    }
+  } catch (err) {
+    console.error("[emotion-checkin] initializeStorage failed", err);
   }
 }
 
@@ -102,11 +106,15 @@ function nextOccurrence(hour: number, minute: number): number {
 
 /** Clear every alarm matching the daily-reminder prefix. */
 async function clearDailyAlarms(): Promise<void> {
-  const all = await chrome.alarms.getAll();
-  for (const a of all) {
-    if (a.name.startsWith(DAILY_ALARM_PREFIX)) {
-      await chrome.alarms.clear(a.name);
+  try {
+    const all = await chrome.alarms.getAll();
+    for (const a of all) {
+      if (a.name.startsWith(DAILY_ALARM_PREFIX)) {
+        await chrome.alarms.clear(a.name);
+      }
     }
+  } catch (err) {
+    console.error("[emotion-checkin] clearDailyAlarms failed", err);
   }
 }
 
@@ -115,32 +123,44 @@ async function clearDailyAlarms(): Promise<void> {
  * Called on install, on startup, and whenever settings change.
  */
 async function syncDailyAlarms(): Promise<void> {
-  await clearDailyAlarms();
-  const settings = await getSettings();
-  if (!settings.notifications_enabled) return;
-  const seen = new Set<string>();
-  for (const time of settings.notification_times) {
-    if (!isValidTimeString(time) || seen.has(time)) continue;
-    seen.add(time);
-    const [hStr, mStr] = time.split(":");
-    const hour = Number(hStr);
-    const minute = Number(mStr);
-    if (!Number.isFinite(hour) || !Number.isFinite(minute)) continue;
-    chrome.alarms.create(alarmNameFor(time), {
-      when: nextOccurrence(hour, minute),
-      periodInMinutes: 24 * 60,
-    });
+  try {
+    await clearDailyAlarms();
+    const settings = await getSettings();
+    if (!settings.notifications_enabled) return;
+    const seen = new Set<string>();
+    for (const time of settings.notification_times) {
+      if (!isValidTimeString(time) || seen.has(time)) continue;
+      seen.add(time);
+      const [hStr, mStr] = time.split(":");
+      const hour = Number(hStr);
+      const minute = Number(mStr);
+      if (!Number.isFinite(hour) || !Number.isFinite(minute)) continue;
+      try {
+        chrome.alarms.create(alarmNameFor(time), {
+          when: nextOccurrence(hour, minute),
+          periodInMinutes: 24 * 60,
+        });
+      } catch (err) {
+        console.error("[emotion-checkin] alarms.create failed", time, err);
+      }
+    }
+  } catch (err) {
+    console.error("[emotion-checkin] syncDailyAlarms failed", err);
   }
 }
 
 /** Ensure the weekly summary alarm exists (Sunday 09:00, repeating weekly). */
 async function ensureWeeklyAlarm(): Promise<void> {
-  const weekly = await chrome.alarms.get(WEEKLY_ALARM_NAME);
-  if (!weekly) {
-    chrome.alarms.create(WEEKLY_ALARM_NAME, {
-      when: nextWeeklyAnchor(0, 9),
-      periodInMinutes: 7 * 24 * 60,
-    });
+  try {
+    const weekly = await chrome.alarms.get(WEEKLY_ALARM_NAME);
+    if (!weekly) {
+      chrome.alarms.create(WEEKLY_ALARM_NAME, {
+        when: nextWeeklyAnchor(0, 9),
+        periodInMinutes: 7 * 24 * 60,
+      });
+    }
+  } catch (err) {
+    console.error("[emotion-checkin] ensureWeeklyAlarm failed", err);
   }
 }
 
@@ -164,16 +184,20 @@ function nextWeeklyAnchor(weekday: number, hour: number): number {
 
 /** Surface the localized daily reminder notification. */
 function showDailyNotification(): void {
-  const notificationId = `${DAILY_ALARM_PREFIX}${Date.now()}`;
-  chrome.notifications.create(notificationId, {
-    type: "basic",
-    iconUrl: chrome.runtime.getURL("icons/icon128.png"),
-    title: t("notif_daily_title"),
-    message: t("notif_daily_body"),
-    priority: 0,
-    requireInteraction: false,
-    silent: true,
-  });
+  try {
+    const notificationId = `${DAILY_ALARM_PREFIX}${Date.now()}`;
+    chrome.notifications.create(notificationId, {
+      type: "basic",
+      iconUrl: chrome.runtime.getURL("icons/icon128.png"),
+      title: t("notif_daily_title"),
+      message: t("notif_daily_body"),
+      priority: 0,
+      requireInteraction: false,
+      silent: true,
+    });
+  } catch (err) {
+    console.error("[emotion-checkin] showDailyNotification failed", err);
+  }
 }
 
 /**
@@ -182,22 +206,26 @@ function showDailyNotification(): void {
  * least once during the week.
  */
 async function showWeeklyShareNotification(): Promise<void> {
-  const settings = await getSettings();
-  if (!settings.weekly_summary_enabled) return;
-  if (!settings.parent_email) return;
-  const entries = await getEntries();
-  const stats = computeWeeklyStats(entries);
-  if (stats.total === 0) return;
-  const notificationId = `${WEEKLY_NOTIFICATION_PREFIX}${Date.now()}`;
-  chrome.notifications.create(notificationId, {
-    type: "basic",
-    iconUrl: chrome.runtime.getURL("icons/icon128.png"),
-    title: t("notif_weekly_title"),
-    message: t("notif_weekly_body"),
-    priority: 0,
-    requireInteraction: false,
-    silent: true,
-  });
+  try {
+    const settings = await getSettings();
+    if (!settings.weekly_summary_enabled) return;
+    if (!settings.parent_email) return;
+    const entries = await getEntries();
+    const stats = computeWeeklyStats(entries);
+    if (stats.total === 0) return;
+    const notificationId = `${WEEKLY_NOTIFICATION_PREFIX}${Date.now()}`;
+    chrome.notifications.create(notificationId, {
+      type: "basic",
+      iconUrl: chrome.runtime.getURL("icons/icon128.png"),
+      title: t("notif_weekly_title"),
+      message: t("notif_weekly_body"),
+      priority: 0,
+      requireInteraction: false,
+      silent: true,
+    });
+  } catch (err) {
+    console.error("[emotion-checkin] showWeeklyShareNotification failed", err);
+  }
 }
 
 /** Dismiss the notification the user just clicked (popup opens via toolbar instead). */
@@ -208,7 +236,11 @@ function handleNotificationClick(notificationId: string): void {
   ) {
     return;
   }
-  chrome.notifications.clear(notificationId);
+  try {
+    chrome.notifications.clear(notificationId);
+  } catch (err) {
+    console.error("[emotion-checkin] notifications.clear failed", err);
+  }
 }
 
 chrome.runtime.onInstalled.addListener(async (details) => {
