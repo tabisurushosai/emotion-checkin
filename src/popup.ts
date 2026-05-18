@@ -1,5 +1,19 @@
 /// <reference types="chrome" />
 
+/**
+ * @file Popup script (`popup.html`).
+ *
+ * Wires up the four panels surfaced when the user clicks the toolbar icon:
+ *   - Emoji picker + optional note → saves an {@link Entry}.
+ *   - "Today" list rendering all of today's entries.
+ *   - Weekly summary with per-emotion and per-day counts + share-to-parent.
+ *   - Mon–Sun calendar with month navigation and a day-detail drawer.
+ *   - Premium/trial card driving the upgrade flow.
+ *
+ * Module-level `let` variables hold the popup's session state; the popup is
+ * destroyed every time it closes, so no persistence is needed beyond storage.
+ */
+
 import { applyI18n, t } from "./i18n";
 import {
   EMOJI_GLYPH,
@@ -75,11 +89,13 @@ let viewMonth: number = new Date().getMonth();
 let selectedDay: { year: number; month: number; day: number } | null = null;
 let premiumStatus: PremiumStatus | null = null;
 
+/** Resolve the share-mail locale ("ja" if UI is Japanese, otherwise "en"). */
 function resolveShareLocale(): ShareLocale {
   const ui = chrome.i18n.getUILanguage?.() ?? "";
   return ui.toLowerCase().startsWith("ja") ? "ja" : "en";
 }
 
+/** Epoch ms at local-midnight today, used to slice "today's" entries. */
 function startOfTodayMs(): number {
   const now = new Date();
   return new Date(
@@ -89,6 +105,7 @@ function startOfTodayMs(): number {
   ).getTime();
 }
 
+/** Format an epoch ms as `HH:MM` (24h) for entry timestamps. */
 function formatClock(ts: number): string {
   const d = new Date(ts);
   const hh = String(d.getHours()).padStart(2, "0");
@@ -96,12 +113,14 @@ function formatClock(ts: number): string {
   return `${hh}:${mm}`;
 }
 
+/** Return all `.emoji-btn` elements in DOM order. */
 function getEmojiButtons(): HTMLButtonElement[] {
   return Array.from(
     document.querySelectorAll<HTMLButtonElement>(".emoji-btn"),
   );
 }
 
+/** Look up the emoji button by its `data-emoji` attribute, or `null`. */
 function getButtonByEmoji(emoji: EmotionKey): HTMLButtonElement | null {
   return (
     document.querySelector<HTMLButtonElement>(
@@ -110,6 +129,11 @@ function getButtonByEmoji(emoji: EmotionKey): HTMLButtonElement | null {
   );
 }
 
+/**
+ * Mark `target` as the radiogroup's selected emoji button (updating
+ * `aria-checked`, focus order, save-button disabled state).
+ * @param focus When true, also moves keyboard focus to `target`.
+ */
 function updateSelection(target: HTMLButtonElement, focus = false): void {
   const emoji = target.dataset.emoji;
   if (!emoji || !isEmotionKey(emoji)) return;
@@ -128,6 +152,7 @@ function updateSelection(target: HTMLButtonElement, focus = false): void {
   setStatus("");
 }
 
+/** Set the inline save-status label, auto-clearing after `SAVED_STATUS_RESET_MS`. */
 function setStatus(message: string): void {
   const el = document.getElementById("save-status");
   if (el) el.textContent = message;
@@ -144,6 +169,7 @@ function setStatus(message: string): void {
   }
 }
 
+/** Render today's entries into the "今日" list; show the empty-state when none. */
 function renderToday(entries: Entry[]): void {
   const list = document.getElementById("today-list") as HTMLUListElement | null;
   const empty = document.getElementById("today-empty") as HTMLElement | null;
@@ -194,11 +220,13 @@ function renderToday(entries: Entry[]): void {
   list.append(frag);
 }
 
+/** Reload entries from storage and re-render the "today" list. */
 async function refreshToday(): Promise<void> {
   const entries = await getEntries();
   renderToday(entries);
 }
 
+/** Render the weekly summary panel (totals + per-day bars + top mood). */
 function renderWeekly(stats: WeeklyStats): void {
   const totalEl = document.getElementById("weekly-total");
   const topRow = document.getElementById("weekly-top-row");
@@ -246,6 +274,7 @@ function renderWeekly(stats: WeeklyStats): void {
   }
 }
 
+/** Reload entries, recompute the weekly stats, and refresh dependent UI. */
 async function refreshWeekly(): Promise<void> {
   const entries = await getEntries();
   const stats = computeWeeklyStats(entries);
@@ -254,6 +283,10 @@ async function refreshWeekly(): Promise<void> {
   await refreshShareButton();
 }
 
+/**
+ * Enable/disable the "share with parent" button and surface a localized hint
+ * explaining why it's disabled (no email configured, no records this week).
+ */
 async function refreshShareButton(): Promise<void> {
   const btn = document.getElementById(
     "share-parent-btn",
@@ -283,6 +316,7 @@ async function refreshShareButton(): Promise<void> {
   hint.textContent = "";
 }
 
+/** Build the share `mailto:` URL and navigate to it to open the user's mail client. */
 async function handleShareClick(): Promise<void> {
   const settings = await getSettings();
   if (!settings.parent_email) return;
@@ -301,6 +335,7 @@ async function handleShareClick(): Promise<void> {
   }
 }
 
+/** Clear the emoji selection, note textarea, and re-disable the save button. */
 function resetForm(): void {
   selectedEmoji = null;
   const buttons = getEmojiButtons();
@@ -315,6 +350,7 @@ function resetForm(): void {
   if (saveBtn) saveBtn.disabled = true;
 }
 
+/** Persist the currently-selected emoji+note as a new entry and refresh all panels. */
 async function handleSave(): Promise<void> {
   if (!selectedEmoji) return;
   const saveBtn = document.getElementById("save-btn") as HTMLButtonElement | null;
@@ -342,6 +378,7 @@ async function handleSave(): Promise<void> {
   }
 }
 
+/** Format the calendar's month header label according to UI locale. */
 function formatMonthLabel(
   year: number,
   month: number,
@@ -351,6 +388,7 @@ function formatMonthLabel(
   return t("calendar_month_label", [String(year), names[month]]);
 }
 
+/** Format a full date label (e.g. "2026 年 5 月 18 日" / "May 18, 2026") used by ARIA. */
 function formatDayLabel(
   year: number,
   month: number,
@@ -361,6 +399,7 @@ function formatDayLabel(
   return `${MONTH_NAMES_EN[month]} ${day}, ${year}`;
 }
 
+/** Tuple equality helper for the currently-selected calendar day. */
 function isSameYearMonthDay(
   a: { year: number; month: number; day: number } | null,
   y: number,
@@ -370,6 +409,7 @@ function isSameYearMonthDay(
   return !!a && a.year === y && a.month === m && a.day === d;
 }
 
+/** True iff the given Y/M/D tuple matches the local "today". */
 function isToday(y: number, m: number, d: number): boolean {
   const now = new Date();
   return (
@@ -377,6 +417,7 @@ function isToday(y: number, m: number, d: number): boolean {
   );
 }
 
+/** Rebuild the month grid for the current `viewYear`/`viewMonth` and re-render. */
 async function refreshCalendar(): Promise<void> {
   const entries = await getEntries();
   const grid = buildMonthGrid(entries, viewYear, viewMonth);
@@ -392,6 +433,7 @@ async function refreshCalendar(): Promise<void> {
   }
 }
 
+/** Render a {@link MonthGrid} into the calendar `<ul>`. */
 function renderCalendar(grid: ReturnType<typeof buildMonthGrid>): void {
   const locale = resolveShareLocale();
   const monthLabel = document.getElementById("calendar-month-label");
@@ -461,10 +503,12 @@ function renderCalendar(grid: ReturnType<typeof buildMonthGrid>): void {
   list.append(frag);
 }
 
+/** Whether the currently cached {@link PremiumStatus} grants premium access. */
 function isPremiumNow(): boolean {
   return premiumStatus?.isPremiumActive ?? false;
 }
 
+/** Enable/disable the prev/next month buttons based on the tier history window. */
 function updateCalendarNav(): void {
   const prev = document.getElementById("calendar-prev") as HTMLButtonElement | null;
   const next = document.getElementById("calendar-next") as HTMLButtonElement | null;
@@ -484,6 +528,7 @@ function updateCalendarNav(): void {
   if (hint) hint.hidden = true;
 }
 
+/** Open the day-detail drawer for the given date, scrolling it into view. */
 async function openDayDetail(
   year: number,
   month: number,
@@ -520,6 +565,7 @@ async function openDayDetail(
   }
 }
 
+/** Populate the day-detail drawer with entries for the chosen date. */
 async function renderDayDetail(
   entries: Entry[],
   year: number,
@@ -574,6 +620,7 @@ async function renderDayDetail(
   list.append(frag);
 }
 
+/** Click handler for the "previous month" button — shows the locked hint at the boundary. */
 function handlePrevMonth(): void {
   const now = new Date();
   const earliest = earliestAllowedMonth(now, isPremiumNow());
@@ -591,6 +638,7 @@ function handlePrevMonth(): void {
   void refreshCalendar();
 }
 
+/** Click handler for the "next month" button — bounded at the current month. */
 function handleNextMonth(): void {
   const now = new Date();
   const latest = latestAllowedMonth(now);
@@ -604,6 +652,7 @@ function handleNextMonth(): void {
   void refreshCalendar();
 }
 
+/** Move the emoji-picker selection by `delta` positions, wrapping at edges. */
 function moveSelection(currentIndex: number, delta: number): void {
   const buttons = getEmojiButtons();
   if (buttons.length === 0) return;
@@ -611,6 +660,7 @@ function moveSelection(currentIndex: number, delta: number): void {
   updateSelection(buttons[next], true);
 }
 
+/** Attach click + roving-tabindex keyboard handlers to all emoji buttons. */
 function bindEmojiPicker(): void {
   const buttons = getEmojiButtons();
   buttons.forEach((btn, index) => {
@@ -647,6 +697,7 @@ function bindEmojiPicker(): void {
   });
 }
 
+/** Render the premium/trial card according to the given status. */
 function renderPremiumSection(status: PremiumStatus): void {
   const statusEl = document.getElementById("premium-status") as HTMLElement | null;
   const descEl = document.getElementById("premium-desc") as HTMLElement | null;
@@ -686,11 +737,13 @@ function renderPremiumSection(status: PremiumStatus): void {
   }
 }
 
+/** Re-read the premium status and re-render the card. */
 async function refreshPremiumStatus(): Promise<void> {
   premiumStatus = await getPremiumStatus();
   renderPremiumSection(premiumStatus);
 }
 
+/** Begin the 7-day premium trial (idempotent) and refresh the UI. */
 async function handleTrialStart(): Promise<void> {
   try {
     await ensureTrialStarted();
@@ -703,6 +756,7 @@ async function handleTrialStart(): Promise<void> {
   }
 }
 
+/** Open the Stripe Checkout tab and reflect the outcome in the status label. */
 async function handleUnlockClick(): Promise<void> {
   try {
     const result = await openCheckout({ locale: resolveShareLocale() });
@@ -717,6 +771,7 @@ async function handleUnlockClick(): Promise<void> {
   }
 }
 
+/** Wire up the static click handlers (save / options / share / nav / premium). */
 function bindActions(): void {
   document.getElementById("save-btn")?.addEventListener("click", () => {
     void handleSave();
@@ -743,6 +798,7 @@ function bindActions(): void {
   });
 }
 
+/** Entry point — runs on `DOMContentLoaded`. Wires all panels and kicks off the first render. */
 function bootstrap(): void {
   applyI18n(document);
   // 全 EMOTION_KEYS が DOM 上に存在するか検証 (開発時の取り違え検出のみ)

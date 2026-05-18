@@ -1,5 +1,16 @@
 /// <reference types="chrome" />
 
+/**
+ * @file Options page (`options.html`).
+ *
+ * Manages the settings panel: daily-reminder times, parent share email,
+ * weekly-summary opt-in, premium status, plus data export / import / reset.
+ *
+ * Local copies of {@link Settings} and {@link DEFAULT_SETTINGS} are kept here
+ * (rather than imported from `storage.ts`) so the options bundle stays small
+ * and decoupled from the popup layer.
+ */
+
 import { applyI18n, t } from "./i18n";
 import {
   ensureTrialStarted,
@@ -7,6 +18,7 @@ import {
   type PremiumStatus,
 } from "./premium";
 
+/** Local copy of the persisted settings shape used by this page. */
 interface Settings {
   notifications_enabled: boolean;
   notification_times: string[];
@@ -28,6 +40,7 @@ const DEFAULT_SETTINGS: Settings = {
 
 let statusTimer: number | null = null;
 
+/** Set the inline save-status label, auto-clearing after `SAVED_STATUS_RESET_MS`. */
 function setStatus(message: string): void {
   const el = document.getElementById("save-status");
   if (el) el.textContent = message;
@@ -44,6 +57,10 @@ function setStatus(message: string): void {
   }
 }
 
+/**
+ * Parse a comma-separated `HH:MM` input into a clean, zero-padded list.
+ * Invalid tokens are silently dropped.
+ */
 function parseTimes(raw: string): string[] {
   return raw
     .split(",")
@@ -57,11 +74,13 @@ function parseTimes(raw: string): string[] {
     });
 }
 
+/** Permissive email check; an empty string is treated as valid (means "unset"). */
 function isValidEmail(value: string): boolean {
   if (!value) return true;
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
+/** Read persisted settings, applying {@link DEFAULT_SETTINGS} for missing/invalid fields. */
 async function loadSettings(): Promise<Settings> {
   const data = await chrome.storage.local.get(STORAGE_KEY_SETTINGS);
   const raw = data[STORAGE_KEY_SETTINGS] as Partial<Settings> | undefined;
@@ -85,10 +104,12 @@ async function loadSettings(): Promise<Settings> {
   };
 }
 
+/** Persist the {@link Settings} object to `chrome.storage.local`. */
 async function saveSettings(settings: Settings): Promise<void> {
   await chrome.storage.local.set({ [STORAGE_KEY_SETTINGS]: settings });
 }
 
+/** Reflect a {@link Settings} object back into the form inputs. */
 function populateForm(settings: Settings): void {
   const enabled = document.getElementById(
     "opt-notif-enabled",
@@ -109,6 +130,7 @@ function populateForm(settings: Settings): void {
   if (weekly) weekly.checked = settings.weekly_summary_enabled;
 }
 
+/** Read the form inputs into a fresh {@link Settings} object. */
 function readForm(): Settings {
   const enabled = document.getElementById(
     "opt-notif-enabled",
@@ -131,6 +153,7 @@ function readForm(): Settings {
   };
 }
 
+/** Save handler — validates email and persists the form. */
 async function handleSave(): Promise<void> {
   const settings = readForm();
   if (!isValidEmail(settings.parent_email)) {
@@ -146,6 +169,7 @@ async function handleSave(): Promise<void> {
   }
 }
 
+/** Dump all storage to a downloadable `emotion-checkin-YYYY-MM-DD.json` file. */
 async function handleExport(): Promise<void> {
   try {
     const data = await chrome.storage.local.get(null);
@@ -166,6 +190,10 @@ async function handleExport(): Promise<void> {
   }
 }
 
+/**
+ * Bulk-import a JSON file previously produced by {@link handleExport}.
+ * Replaces existing keys; validation happens at the storage layer when read.
+ */
 async function handleImportFile(file: File): Promise<void> {
   try {
     const text = await file.text();
@@ -183,6 +211,7 @@ async function handleImportFile(file: File): Promise<void> {
   }
 }
 
+/** Wipe all entries after a confirm dialog (preserves settings/premium flags). */
 async function handleReset(): Promise<void> {
   const ok = window.confirm(t("options_reset_confirm"));
   if (!ok) return;
@@ -195,6 +224,7 @@ async function handleReset(): Promise<void> {
   }
 }
 
+/** Render the options-page premium card matching the given status. */
 function renderPremiumCard(status: PremiumStatus): void {
   const statusEl = document.getElementById(
     "opt-premium-status",
@@ -239,11 +269,13 @@ function renderPremiumCard(status: PremiumStatus): void {
   }
 }
 
+/** Re-read the premium status and re-render the card. */
 async function refreshPremiumCard(): Promise<void> {
   const status = await getPremiumStatus();
   renderPremiumCard(status);
 }
 
+/** Start the 7-day trial (idempotent) and refresh the card. */
 async function handleTrialStart(): Promise<void> {
   try {
     await ensureTrialStarted();
@@ -255,10 +287,12 @@ async function handleTrialStart(): Promise<void> {
   }
 }
 
+/** Stub: the options page just hints "use the popup" until the unlock UI lands. */
 function handleUnlockClick(): void {
   setStatus(t("premium_unlock_pending"));
 }
 
+/** Wire up the save / export / import / reset / premium buttons. */
 function bindActions(): void {
   document
     .getElementById("btn-save")
@@ -296,6 +330,7 @@ function bindActions(): void {
     ?.addEventListener("click", () => handleUnlockClick());
 }
 
+/** Entry point — runs on `DOMContentLoaded`. Localizes, loads settings, and binds handlers. */
 async function bootstrap(): Promise<void> {
   applyI18n(document);
   const settings = await loadSettings();

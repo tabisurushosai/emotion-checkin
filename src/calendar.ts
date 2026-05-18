@@ -1,33 +1,49 @@
+/**
+ * @file Month-grid construction and navigation utilities for the calendar view.
+ *
+ * Pure functions only — no DOM or storage access; consumers feed in entries and
+ * render the resulting grid themselves.
+ */
 import { EMOTION_KEYS, type EmotionKey, type Entry } from "./storage";
 
+/** One cell of the rendered month grid. */
 export interface DayCell {
   year: number;
   month: number;
   day: number;
+  /** False for leading/trailing days that belong to adjacent months. */
   inMonth: boolean;
+  /** Number of entries recorded on this date. */
   count: number;
+  /** Most frequent emotion of the day, or `null` if no entries. */
   topEmoji: EmotionKey | null;
+  /** Epoch ms at local-midnight of this date. */
   dayStartMs: number;
 }
 
+/** A rendered month, broken into Mon–Sun week rows. */
 export interface MonthGrid {
   year: number;
   month: number;
   weeks: DayCell[][];
 }
 
+/** Epoch ms at local-midnight of the given Y/M/D. */
 function dayStartMs(year: number, month: number, day: number): number {
   return new Date(year, month, day).getTime();
 }
 
+/** Index of `date` within a Mon–Sun week (0 = Monday, 6 = Sunday). */
 function mondayIndex(date: Date): number {
   return (date.getDay() + 6) % 7;
 }
 
+/** Number of days in `year`/`month`. */
 function daysInMonth(year: number, month: number): number {
   return new Date(year, month + 1, 0).getDate();
 }
 
+/** Group entries by local-date string so day lookups are O(1). */
 function bucketEntriesByDay(entries: Entry[]): Map<string, Entry[]> {
   const map = new Map<string, Entry[]>();
   for (const entry of entries) {
@@ -40,6 +56,7 @@ function bucketEntriesByDay(entries: Entry[]): Map<string, Entry[]> {
   return map;
 }
 
+/** Pick the most-frequent emotion in `dayEntries` (ties resolved by EMOTION_KEYS order). */
 function topEmojiOf(dayEntries: Entry[]): EmotionKey | null {
   if (dayEntries.length === 0) return null;
   const counts: Record<string, number> = {};
@@ -58,6 +75,13 @@ function topEmojiOf(dayEntries: Entry[]): EmotionKey | null {
   return top;
 }
 
+/**
+ * Build a Mon–Sun {@link MonthGrid} for `year`/`month`, padded so each week is
+ * exactly 7 cells.
+ * @param entries All known entries — only those falling in the visible range are used.
+ * @param year 4-digit year.
+ * @param month 0-indexed month (0 = January).
+ */
 export function buildMonthGrid(
   entries: Entry[],
   year: number,
@@ -112,6 +136,10 @@ export function buildMonthGrid(
   return { year, month, weeks };
 }
 
+/**
+ * Step a (year, month) tuple by ±1 month, rolling over year boundaries.
+ * @param delta -1 to go back one month, +1 to advance one month.
+ */
 export function shiftMonth(
   year: number,
   month: number,
@@ -123,9 +151,16 @@ export function shiftMonth(
   return { year, month: next };
 }
 
+/** Free-tier calendar history window in months. */
 export const FREE_CALENDAR_HISTORY_MONTHS = 3;
+/** Premium-tier calendar history window in years. */
 export const PREMIUM_CALENDAR_HISTORY_YEARS = 5;
 
+/**
+ * Oldest month the calendar may navigate to given the current tier.
+ * @param now Reference date (for testability).
+ * @param premium Whether the user has premium access.
+ */
 export function earliestAllowedMonth(
   now: Date = new Date(),
   premium: boolean = false,
@@ -138,12 +173,14 @@ export function earliestAllowedMonth(
   return { year: now.getFullYear(), month: m };
 }
 
+/** Newest month the calendar may navigate to (the current month). */
 export function latestAllowedMonth(
   now: Date = new Date(),
 ): { year: number; month: number } {
   return { year: now.getFullYear(), month: now.getMonth() };
 }
 
+/** All entries on a specific local date, newest first. */
 export function entriesForDay(
   entries: Entry[],
   year: number,
@@ -162,6 +199,7 @@ export function entriesForDay(
     .sort((a, b) => b.ts - a.ts);
 }
 
+/** Compare two (year, month) tuples chronologically (`<0`, `0`, `>0`). */
 export function compareYearMonth(
   a: { year: number; month: number },
   b: { year: number; month: number },
