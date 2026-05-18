@@ -1,7 +1,1 @@
-[12:41:35] [emotion-checkin phase6 L1] 残15
-T101 完了。README.md に日英バイリンガルで機能一覧表 (無料 / Premium / Trial の区分つき)、使用例 (popup 操作 + Premium 解放手順)、開発者向けインストール手順、プライバシー制約を追加し、TODO_PHASE6.md を `[x]` に更新、main に push。
-[12:42:49] [emotion-checkin phase6 L2] 残14
-T102 完了。`src/` 配下の 11 ファイル (background, calendar, emoji, i18n, options, parentShare, popup, premium, storage, upgrade, weekly) すべてに file-level overview と関数/型ごとの JSDoc を追加。`tsc --noEmit` 通過、commit `0a3dc3c` を origin main に push 済み。
-[12:52:53] [emotion-checkin phase6 L3] 残13
-T103 完了。popup.html と options.html の button/input 計 14 要素に `aria-label` を `data-i18n-attr` で付与 (i18n 経由)、静的フォールバック値も併記。commit `1826478` を origin/main へ push 済み。
-[12:55:33] [emotion-checkin phase6 L4] 残12
+[12:57:54] [emotion-checkin phase6 L1] 残11
