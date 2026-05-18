@@ -103,6 +103,18 @@
     "message": "Import data",
     "description": "Import button"
   },
+  "options_export_done": {
+    "message": "Exported",
+    "description": "Export success message"
+  },
+  "options_import_done": {
+    "message": "Imported",
+    "description": "Import success message"
+  },
+  "options_import_invalid": {
+    "message": "Invalid file format",
+    "description": "Import failure message (corrupt JSON or unrecognized shape)"
+  },
   "options_reset": {
     "message": "Delete all records",
     "description": "Reset button"

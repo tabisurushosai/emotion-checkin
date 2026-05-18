@@ -103,6 +103,18 @@
     "message": "データをインポート",
     "description": "インポートボタン"
   },
+  "options_export_done": {
+    "message": "エクスポートしました",
+    "description": "エクスポート完了メッセージ"
+  },
+  "options_import_done": {
+    "message": "インポートしました",
+    "description": "インポート完了メッセージ"
+  },
+  "options_import_invalid": {
+    "message": "ファイル形式が正しくありません",
+    "description": "インポート失敗メッセージ (壊れた JSON / 形式不一致)"
+  },
   "options_reset": {
     "message": "すべての記録を削除",
     "description": "リセットボタン"

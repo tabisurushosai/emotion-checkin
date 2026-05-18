@@ -184,15 +184,93 @@ export async function getInstalledAt(): Promise<number | null> {
   return typeof v === "number" ? v : null;
 }
 
-/** Dump the entire `chrome.storage.local` namespace (used by export feature). */
-export async function exportAll(): Promise<Record<string, unknown>> {
-  return await chrome.storage.local.get(null);
+/** Identifier embedded in export envelopes so imports can recognize our payloads. */
+export const EXPORT_APP_ID = "emotion-checkin";
+
+/** Versioned envelope wrapping a `chrome.storage.local` snapshot. */
+export interface ExportEnvelope {
+  app: typeof EXPORT_APP_ID;
+  /** Envelope shape version — bump when the wrapper itself changes. */
+  exportVersion: 1;
+  /** Storage schema version at time of export. */
+  schemaVersion: number;
+  /** ISO 8601 timestamp of the export. */
+  exportedAt: string;
+  /** Raw storage payload — the same keys `chrome.storage.local.get(null)` returns. */
+  data: Record<string, unknown>;
 }
 
-/** Bulk-import a previously exported payload. Throws on non-object input. */
-export async function importAll(payload: Record<string, unknown>): Promise<void> {
-  if (!payload || typeof payload !== "object") {
+/** Dump the entire `chrome.storage.local` namespace inside a versioned envelope. */
+export async function exportAll(): Promise<ExportEnvelope> {
+  const data = await chrome.storage.local.get(null);
+  return {
+    app: EXPORT_APP_ID,
+    exportVersion: 1,
+    schemaVersion: CURRENT_SCHEMA_VERSION,
+    exportedAt: new Date().toISOString(),
+    data,
+  };
+}
+
+/** Recognized top-level keys that may be restored on import. Everything else is dropped. */
+const IMPORTABLE_KEYS: readonly string[] = [
+  STORAGE_KEYS.entries,
+  STORAGE_KEYS.settings,
+  STORAGE_KEYS.installedAt,
+  STORAGE_KEYS.trialStartTs,
+  STORAGE_KEYS.premiumUnlocked,
+  STORAGE_KEYS.schemaVersion,
+];
+
+/**
+ * Pull the raw storage payload out of either a versioned envelope (preferred)
+ * or a legacy raw-dump file produced by earlier builds. Returns `null` if the
+ * input does not match either shape.
+ */
+function unwrapPayload(raw: unknown): Record<string, unknown> | null {
+  if (!raw || typeof raw !== "object") return null;
+  const obj = raw as Record<string, unknown>;
+  if (obj.app === EXPORT_APP_ID && obj.data && typeof obj.data === "object") {
+    return obj.data as Record<string, unknown>;
+  }
+  // Legacy dumps had no envelope — sniff for at least one known key.
+  for (const key of IMPORTABLE_KEYS) {
+    if (key in obj) return obj;
+  }
+  return null;
+}
+
+/**
+ * Bulk-import a previously exported payload. Accepts the new envelope format
+ * and legacy raw dumps. Unknown keys are dropped; entries and settings are
+ * normalized via the same guards used on read so malformed input cannot
+ * corrupt storage. Throws on inputs that don't look like our exports.
+ */
+export async function importAll(raw: unknown): Promise<void> {
+  const payload = unwrapPayload(raw);
+  if (!payload) {
     throw new Error("invalid payload");
   }
-  await chrome.storage.local.set(payload);
+  const sanitized: Record<string, unknown> = {};
+  for (const key of IMPORTABLE_KEYS) {
+    if (!(key in payload)) continue;
+    const value = payload[key];
+    if (key === STORAGE_KEYS.entries) {
+      if (!Array.isArray(value)) continue;
+      const normalized: Entry[] = [];
+      for (const item of value) {
+        const e = normalizeEntry(item);
+        if (e) normalized.push(e);
+      }
+      sanitized[key] = normalized;
+    } else if (key === STORAGE_KEYS.settings) {
+      sanitized[key] = normalizeSettings(value);
+    } else {
+      sanitized[key] = value;
+    }
+  }
+  if (Object.keys(sanitized).length === 0) {
+    throw new Error("invalid payload");
+  }
+  await chrome.storage.local.set(sanitized);
 }

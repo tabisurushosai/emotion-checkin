@@ -17,6 +17,7 @@ import {
   getPremiumStatus,
   type PremiumStatus,
 } from "./premium";
+import { exportAll, importAll } from "./storage";
 
 /** Local copy of the persisted settings shape used by this page. */
 interface Settings {
@@ -169,11 +170,15 @@ async function handleSave(): Promise<void> {
   }
 }
 
-/** Dump all storage to a downloadable `emotion-checkin-YYYY-MM-DD.json` file. */
+/**
+ * Dump all storage to a downloadable `emotion-checkin-YYYY-MM-DD.json` file.
+ * Uses the versioned envelope from {@link exportAll} so future imports can
+ * recognize the payload shape and migrate it if needed.
+ */
 async function handleExport(): Promise<void> {
   try {
-    const data = await chrome.storage.local.get(null);
-    const json = JSON.stringify(data, null, 2);
+    const envelope = await exportAll();
+    const json = JSON.stringify(envelope, null, 2);
     const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -184,6 +189,7 @@ async function handleExport(): Promise<void> {
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
+    setStatus(t("options_export_done"));
   } catch (err) {
     console.error("[emotion-checkin] export failed", err);
     setStatus(t("error_generic"));
@@ -192,22 +198,26 @@ async function handleExport(): Promise<void> {
 
 /**
  * Bulk-import a JSON file previously produced by {@link handleExport}.
- * Replaces existing keys; validation happens at the storage layer when read.
+ * Accepts both the envelope format and legacy raw-dump files. Unknown keys
+ * are dropped at the storage layer so malformed input cannot corrupt state.
  */
 async function handleImportFile(file: File): Promise<void> {
   try {
     const text = await file.text();
-    const parsed = JSON.parse(text) as Record<string, unknown>;
-    if (!parsed || typeof parsed !== "object") {
-      throw new Error("invalid payload");
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      setStatus(t("options_import_invalid"));
+      return;
     }
-    await chrome.storage.local.set(parsed);
+    await importAll(parsed);
     const settings = await loadSettings();
     populateForm(settings);
-    setStatus(t("popup_saved"));
+    setStatus(t("options_import_done"));
   } catch (err) {
     console.error("[emotion-checkin] import failed", err);
-    setStatus(t("error_generic"));
+    setStatus(t("options_import_invalid"));
   }
 }
 
