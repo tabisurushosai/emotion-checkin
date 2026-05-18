@@ -110,8 +110,9 @@
           class="note__input"
           rows="2"
           maxlength="200"
-          data-i18n-attr="placeholder:popup_note_placeholder"
+          data-i18n-attr="placeholder:popup_note_placeholder,aria-label:popup_note_placeholder"
           placeholder="メモ (任意)"
+          aria-label="メモ (任意)"
         ></textarea>
       </section>
 
@@ -121,6 +122,8 @@
           id="save-btn"
           class="btn btn--primary"
           data-i18n="popup_save"
+          data-i18n-attr="aria-label:popup_save"
+          aria-label="保存"
           disabled
         >
           保存
@@ -217,6 +220,8 @@
             id="share-parent-btn"
             class="btn btn--secondary"
             data-i18n="parent_share_button"
+            data-i18n-attr="aria-label:parent_share_button"
+            aria-label="保護者に共有"
             disabled
           >
             保護者に共有
@@ -318,6 +323,8 @@
             id="premium-trial-btn"
             class="btn btn--secondary"
             data-i18n="premium_trial_start"
+            data-i18n-attr="aria-label:premium_trial_start"
+            aria-label="7日間無料で試す"
             hidden
           >7日間無料で試す</button>
           <button
@@ -325,6 +332,8 @@
             id="premium-unlock-btn"
             class="btn btn--primary"
             data-i18n="premium_unlock"
+            data-i18n-attr="aria-label:premium_unlock"
+            aria-label="アンロックする"
             hidden
           >アンロックする</button>
         </div>
@@ -336,6 +345,8 @@
           id="open-options"
           class="btn btn--link"
           data-i18n="options_title"
+          data-i18n-attr="aria-label:options_title"
+          aria-label="設定"
         >
           設定
         </button>

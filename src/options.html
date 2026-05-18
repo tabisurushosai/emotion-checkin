@@ -19,7 +19,12 @@
 
         <div class="field field--row">
           <label class="switch" for="opt-notif-enabled">
-            <input type="checkbox" id="opt-notif-enabled" />
+            <input
+              type="checkbox"
+              id="opt-notif-enabled"
+              data-i18n-attr="aria-label:options_notification_enable"
+              aria-label="リマインダー通知を有効にする"
+            />
             <span class="switch__label" data-i18n="options_notification_enable">
               リマインダー通知を有効にする
             </span>
@@ -40,6 +45,8 @@
             class="input"
             inputmode="numeric"
             placeholder="09:00, 13:00, 20:00"
+            data-i18n-attr="aria-label:options_notification_times"
+            aria-label="通知時刻"
             aria-describedby="opt-notif-times-hint"
           />
           <p id="opt-notif-times-hint" class="field__hint">
@@ -67,12 +74,19 @@
             class="input"
             autocomplete="off"
             placeholder="example@example.com"
+            data-i18n-attr="aria-label:options_parent_email"
+            aria-label="保護者のメールアドレス"
           />
         </div>
 
         <div class="field field--row">
           <label class="switch" for="opt-weekly-enabled">
-            <input type="checkbox" id="opt-weekly-enabled" />
+            <input
+              type="checkbox"
+              id="opt-weekly-enabled"
+              data-i18n-attr="aria-label:options_weekly_summary"
+              aria-label="週次サマリー"
+            />
             <span class="switch__label" data-i18n="options_weekly_summary">
               週次サマリー
             </span>
@@ -106,6 +120,8 @@
             id="opt-premium-trial"
             class="btn btn--secondary"
             data-i18n="premium_trial_start"
+            data-i18n-attr="aria-label:premium_trial_start"
+            aria-label="7日間無料で試す"
             hidden
           >7日間無料で試す</button>
           <button
@@ -113,6 +129,8 @@
             id="opt-premium-unlock"
             class="btn btn--primary"
             data-i18n="premium_unlock"
+            data-i18n-attr="aria-label:premium_unlock"
+            aria-label="アンロックする"
             hidden
           >アンロックする</button>
         </div>
@@ -129,6 +147,8 @@
             id="btn-export"
             class="btn btn--secondary"
             data-i18n="options_export"
+            data-i18n-attr="aria-label:options_export"
+            aria-label="データをエクスポート"
           >
             データをエクスポート
           </button>
@@ -137,6 +157,8 @@
             id="btn-import"
             class="btn btn--secondary"
             data-i18n="options_import"
+            data-i18n-attr="aria-label:options_import"
+            aria-label="データをインポート"
           >
             データをインポート
           </button>
@@ -145,12 +167,16 @@
             id="file-import"
             class="visually-hidden"
             accept="application/json,.json"
+            data-i18n-attr="aria-label:options_import"
+            aria-label="データをインポート"
           />
           <button
             type="button"
             id="btn-reset"
             class="btn btn--danger"
             data-i18n="options_reset"
+            data-i18n-attr="aria-label:options_reset"
+            aria-label="すべての記録を削除"
           >
             すべての記録を削除
           </button>
@@ -163,6 +189,8 @@
           id="btn-save"
           class="btn btn--primary"
           data-i18n="options_save"
+          data-i18n-attr="aria-label:options_save"
+          aria-label="設定を保存"
         >
           設定を保存
         </button>
