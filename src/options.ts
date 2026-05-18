@@ -328,6 +328,19 @@ function bindActions(): void {
   document
     .getElementById("opt-premium-unlock")
     ?.addEventListener("click", () => handleUnlockClick());
+
+  // 各テキスト/メール入力で Enter を押下すると設定を保存 (form がないため明示配線)
+  const enterToSave = (id: string): void => {
+    const input = document.getElementById(id) as HTMLInputElement | null;
+    input?.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        void handleSave();
+      }
+    });
+  };
+  enterToSave("opt-notif-times");
+  enterToSave("opt-parent-email");
 }
 
 /** Entry point — runs on `DOMContentLoaded`. Localizes, loads settings, and binds handlers. */

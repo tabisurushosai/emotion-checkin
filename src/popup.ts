@@ -771,6 +771,17 @@ async function handleUnlockClick(): Promise<void> {
   }
 }
 
+/** Close the calendar day-detail drawer and clear the cell's `is-selected` styling. */
+function closeDayDetail(): void {
+  const detail = document.getElementById("calendar-day-detail") as HTMLElement | null;
+  if (!detail || detail.hidden) return;
+  detail.hidden = true;
+  selectedDay = null;
+  document
+    .querySelectorAll<HTMLLIElement>("#calendar-grid .calendar__cell")
+    .forEach((li) => li.classList.remove("is-selected"));
+}
+
 /** Wire up the static click handlers (save / options / share / nav / premium). */
 function bindActions(): void {
   document.getElementById("save-btn")?.addEventListener("click", () => {
@@ -795,6 +806,22 @@ function bindActions(): void {
   });
   document.getElementById("premium-unlock-btn")?.addEventListener("click", () => {
     void handleUnlockClick();
+  });
+
+  // Ctrl/Cmd+Enter で保存 (textarea 内のプレーン Enter は改行として残す)
+  const noteInput = document.getElementById(
+    "note-input",
+  ) as HTMLTextAreaElement | null;
+  noteInput?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+      event.preventDefault();
+      if (selectedEmoji) void handleSave();
+    }
+  });
+
+  // Escape でカレンダーの日詳細ドロワーを閉じる
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeDayDetail();
   });
 }
 
